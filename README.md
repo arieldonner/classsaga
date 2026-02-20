@@ -65,3 +65,38 @@ My project will be a student-centered, gamified approach to an incentive system.
   - Game design must be engaging, but not time consuming (should not be able to play more than a few minutes daily to not take away from instruction time)
       - Consideration for idle game-like progression
   - There will be no penalties for a lack of engagement with the app
+
+## How to Run
+1. Clone the repository
+```
+git clone <your-repo-url>
+cd MSCS-Spring2026-ArielTang
+```
+2. Backend setup
+```
+cd server
+npm install
+```
+Create a .env file in /server.
+```
+PORT=5050
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+```
+Start the backend server
+```
+npm run dev
+```
+The backend will run on 
+```
+http://localhost:5050
+```
+3. Frontend setup 
+
+Open a new terminal and enter:
+```
+cd client
+npm install
+npm run dev
+```
+
