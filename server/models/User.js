@@ -43,26 +43,24 @@ const userSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
     if (this.role === "teacher") {
         if (!this.email) {
-            return next(new Error("Teachers must have an email."));
+            this.invalidate("email", "Teachers must have an email.");
         }
         if (this.username) {
-            return next(new Error("Teachers should not have a username."));
+            this.invalidate("username", "Teachers should not have a username.");
         }
     }
 
     if (this.role === "student") {
         if (!this.username) {
-            return next(new Error("Students must have a username."));
+            this.invalidate("username", "Students must have a username.");
         }
         if (this.email) {
-            return next(new Error("Students should not have an email."));
+            this.invalidate("email", "Students should not have an email.");
         }
     }
-
-    next();
 });
 
 userSchema.pre("save", async function () {
