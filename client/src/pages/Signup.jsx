@@ -25,8 +25,6 @@ export default function Signup() {
 
             const res = await api.post("/api/auth/register", payload);
 
-            // localStorage.setItem("token", res.data.token);
-            // localStorage.setItem("user", JSON.stringify(res.data.user));
             login(res.data.user, res.data.token);
 
             if (res.data.user.role === "teacher") {
