@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 require('dotenv').config();
 
 const authRoutes = require("./routes/authRoutes");
+const classroomRoutes = require("./routes/classroomRoutes");
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
+app.use("/api/classrooms", classroomRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
