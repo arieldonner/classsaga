@@ -1,7 +1,7 @@
 const express = require("express");
 const Classroom = require("../models/Classroom");
 const generateJoinCode = require("../utils/generateJoinCode");
-const protect = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 

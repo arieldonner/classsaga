@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Signup from "./pages/Signup";
 import PublicRoute from "./components/PublicRoute";
 import Navbar from "./components/Navbar";
+import CreateClassroom from "./pages/teacher/CreateClassroom";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
         <Route path="/student" element={<ProtectedRoute role="student"> <StudentDashboard /> </ProtectedRoute>}/>
         <Route path="/teacher" element={<ProtectedRoute role="teacher"> <TeacherDashboard /> </ProtectedRoute>}/>
+        <Route path="/teacher/classrooms/new" element={<ProtectedRoute role="teacher"> <CreateClassroom /> </ProtectedRoute>}/>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
