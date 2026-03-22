@@ -57,4 +57,64 @@ router.get("/my-classrooms", protect, async (req, res) => {
     }
 });
 
+// Student joins a classroom by join code
+router.post("/join", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can join classrooms." });
+        }
+
+        const { joinCode } = req.body;
+
+        if (!joinCode) {
+            return res.status(400).json({ message: "Join code is required." });
+        }
+
+        const classroom = await Classroom.findOne({
+            joinCode: joinCode.toUpperCase(),
+        });
+
+        if (!classroom) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        const alreadyJoined = classroom.students.some(
+            (studentId) => studentId.toString() === req.user._id.toString()
+        );
+
+        if (alreadyJoined) {
+            return res.status(400).json({ message: "You have already joined this classroom." });
+        }
+
+        classroom.students.push(req.user._id);
+        await classroom.save();
+
+        res.json({
+            message: "Joined classroom successfully.",
+            classroom,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to join classroom." });
+    }
+});
+
+// Student views joined classrooms
+router.get("/student-classrooms", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can view joined classrooms." });
+        }
+
+        const classrooms = await Classroom.find({
+            students: req.user._id,
+        })
+            .populate("teacher", "name")
+            .sort({ createdAt: -1 });
+
+        res.json(classrooms);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch joined classrooms." });
+    }
+});
+
 module.exports = router;
