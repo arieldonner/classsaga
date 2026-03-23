@@ -69,4 +69,25 @@ router.post("/award", protect, async (req, res) => {
     }
 });
 
+// Student gets their point history
+router.get("/my-transactions", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can view transactions." });
+        }
+
+        const transactions = await PointTransaction.find({
+            student: req.user._id,
+        })
+            .populate("teacher", "name")
+            .populate("classroom", "name")
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        res.json(transactions);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch transactions." });
+    }
+});
+
 module.exports = router;

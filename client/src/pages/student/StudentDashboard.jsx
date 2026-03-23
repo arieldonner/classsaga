@@ -7,6 +7,9 @@ export default function StudentDashboard() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
 
+    const [transactions, setTransactions] = useState([]);
+    const [loadingTx, setLoadingTx] = useState(true);
+
     useEffect(() => {
         const fetchClassrooms = async () => {
         try {
@@ -22,50 +25,90 @@ export default function StudentDashboard() {
         fetchClassrooms();
     }, []);
 
+    useEffect(() => {
+        const fetchTransactions = async () => {
+        try {
+            const res = await api.get("/api/points/my-transactions");
+            setTransactions(res.data);
+        } catch (err) {
+            console.error("Failed to load transactions");
+        } finally {
+            setLoadingTx(false);
+        }
+        };
+
+        fetchTransactions();
+    }, []);
+
     return (
         <div className="container py-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Student Dashboard</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2>Student Dashboard</h2>
 
-            <Link to="/student/classrooms/join" className="btn btn-primary">
-            Join Classroom
-            </Link>
-        </div>
+                <Link to="/student/classrooms/join" className="btn btn-primary">
+                Join Classroom
+                </Link>
+            </div>
 
-        {loading && <p>Loading classrooms...</p>}
+            {loading && <p>Loading classrooms...</p>}
 
-        {error && <div className="alert alert-danger">{error}</div>}
+            {error && <div className="alert alert-danger">{error}</div>}
 
-        {!loading && !error && (
-            <div className="card shadow-sm p-4">
-            <h4 className="mb-3">My Classrooms</h4>
+            {!loading && !error && (
+                <div className="card shadow-sm p-4">
+                    <h4 className="mb-3">My Classrooms</h4>
 
-            {classrooms.length === 0 ? (
-                <p className="mb-0">You have not joined any classrooms yet.</p>
-            ) : (
-                <div className="list-group">
-                {classrooms.map((classroom) => (
-                    <div
-                    key={classroom._id}
-                    className="list-group-item"
-                    >
-                    <h5 className="mb-1">{classroom.name}</h5>
+                    {classrooms.length === 0 ? (
+                        <p className="mb-0">You have not joined any classrooms yet.</p>
+                    ) : (
+                        <div className="list-group">
+                            {classrooms.map((classroom) => (
+                                <div
+                                key={classroom._id}
+                                className="list-group-item"
+                                >
+                                    <h5 className="mb-1">{classroom.name}</h5>
 
-                    {classroom.description && (
-                        <p className="mb-1 text-muted">{classroom.description}</p>
+                                    {classroom.description && (
+                                        <p className="mb-1 text-muted">{classroom.description}</p>
+                                    )}
+
+                                    {classroom.teacher && (
+                                        <small className="text-muted">
+                                        Teacher: {classroom.teacher.name}
+                                        </small>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     )}
-
-                    {classroom.teacher && (
-                        <small className="text-muted">
-                        Teacher: {classroom.teacher.name}
-                        </small>
-                    )}
-                    </div>
-                ))}
                 </div>
             )}
-            </div>
-        )}
+            <div className="card shadow-sm p-4 mt-4">
+                <h4 className="mb-3">Recent Activity</h4>
+                {loadingTx ? (
+                    <p>Loading activity...</p>
+                ) : transactions.length === 0 ? (
+                    <p className="mb-0">No recent activity.</p>
+                ) : (
+                    <div className="list-group">
+                        {transactions.map((tx) => (
+                            <div key={tx._id} className="list-group-item">
+                            <div className="fw-semibold">
+                                +{tx.amount} points
+                            </div>
+
+                            <div className="text-muted">
+                                {tx.reason}
+                            </div>
+                            <small className="text-muted">
+                                {tx.classroom?.name} • {tx.teacher?.name}
+                            </small>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                </div>
         </div>
     );
 }

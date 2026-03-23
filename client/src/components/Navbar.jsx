@@ -24,6 +24,11 @@ export default function Navbar() {
 
         {user && (
             <div className="d-flex align-items-center">
+                {user.role === "student" && (
+                    <span className="me-3 fw-semibold">
+                        Points: {user.points ?? 0}
+                    </span>
+                )}  
                 <span className="me-3 fw-semibold">
                     {user.name}
                 </span>
