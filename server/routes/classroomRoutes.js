@@ -117,4 +117,26 @@ router.get("/student-classrooms", protect, async (req, res) => {
     }
 });
 
+// Get single classroom (teacher)
+router.get("/:id", protect, async (req, res) => {
+    try {
+        const classroom = await Classroom.findById(req.params.id)
+            .populate("students", "name username")
+            .populate("teacher", "name");
+
+        if (!classroom) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        // Only the teacher who owns the class can view it
+        if (classroom.teacher._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not authorized to view this classroom." });
+        }
+
+        res.json(classroom);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch classroom." });
+    }
+});
+
 module.exports = router;

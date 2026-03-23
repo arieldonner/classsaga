@@ -45,9 +45,10 @@ export default function TeacherDashboard() {
                     ) : (
                         <div className="list-group">
                             {classrooms.map((classroom) => (
-                                <div
-                                key={classroom._id}
-                                className="list-group-item d-flex justify-content-between align-items-start"
+                               <Link
+                                    key={classroom._id}
+                                    to={`/teacher/classrooms/${classroom._id}`}
+                                    className="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
                                 >
                                     <div>
                                         <h5 className="mb-1">{classroom.name}</h5>
@@ -59,7 +60,7 @@ export default function TeacherDashboard() {
                                     <span className="badge text-bg-secondary">
                                         Code: {classroom.joinCode}
                                     </span>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     )}
