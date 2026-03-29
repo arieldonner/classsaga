@@ -10,6 +10,9 @@ export default function StudentDashboard() {
     const [transactions, setTransactions] = useState([]);
     const [loadingTx, setLoadingTx] = useState(true);
 
+    const [pet, setPet] = useState(null);
+    const [loadingPet, setLoadingPet] = useState(true);
+
     useEffect(() => {
         const fetchClassrooms = async () => {
         try {
@@ -40,6 +43,21 @@ export default function StudentDashboard() {
         fetchTransactions();
     }, []);
 
+    useEffect(() => {
+        const fetchPet = async () => {
+            try {
+                const res = await api.get("/api/pets/my-pet");
+                setPet(res.data);
+            } catch (err) {
+                console.error("Failed to load pet");
+            } finally {
+                setLoadingPet(false);
+            }
+        };
+
+        fetchPet();
+    }, []);
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -48,6 +66,28 @@ export default function StudentDashboard() {
                 <Link to="/student/classrooms/join" className="btn btn-primary">
                 Join Classroom
                 </Link>
+            </div>
+
+            <div className="card shadow-sm p-4 mb-4">
+                <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 className="mb-2">My Pet</h4>
+
+                        {loadingPet ? (
+                            <p className="mb-0">Loading pet...</p>
+                        ) : pet ? (
+                            <p className="mb-0">
+                                {pet.name} • Level {pet.level}
+                            </p>
+                        ) : (
+                            <p className="mb-0">No pet found.</p>
+                        )}
+                    </div>
+
+                    <Link to="/student/pet" className="btn btn-outline-primary">
+                        View Pet
+                    </Link>
+                </div>
             </div>
 
             {loading && <p>Loading classrooms...</p>}

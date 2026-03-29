@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
+const Pet = require("../models/Pet");
 
 // Generate JWT
 const generateToken = (user) => {
@@ -40,8 +41,15 @@ exports.registerUser = async (req, res) => {
         }
 
         const user = new User({name, username, email, password, role});
-
         await user.save();
+
+        if (user.role === "student") {
+            await Pet.create({
+                student: user._id,
+                species: "wolfy", 
+                isActive: true,
+            });
+        }
 
         const token = generateToken(user);
 
