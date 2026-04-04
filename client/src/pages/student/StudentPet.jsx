@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/api";
+import wolfyImage from "../../assets/pets/wolfy.png";
 
 export default function StudentPet() {
   const [pet, setPet] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const petImages = {
+    wolfy: wolfyImage,
+  };
 
   useEffect(() => {
     const fetchPet = async () => {
@@ -38,12 +43,17 @@ export default function StudentPet() {
             <div className="card shadow-sm p-4">
             <div className="row align-items-center">
                 <div className="col-md-4 text-center mb-4 mb-md-0">
-                <div
-                    className="border rounded bg-light d-flex align-items-center justify-content-center"
-                    style={{ minHeight: "260px" }}
-                >
-                    Pet image goes here
-                </div>
+                    <div
+                        className="border rounded bg-light d-flex align-items-center justify-content-center"
+                        style={{ minHeight: "260px" }}
+                    >
+                        <img
+                            src={petImages[pet.species]}
+                            alt="Pet"
+                            className="img-fluid"
+                            style={{ maxHeight: "240px" }}
+                        />
+                    </div>
                 </div>
 
                 <div className="col-md-8">
