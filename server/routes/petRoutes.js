@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Pet = require("../models/Pet");
+const User = require("../models/User");
 const DailyCareLog = require("../models/DailyCareLog");
+const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
 
 const getTodayDateKey = () => {
@@ -40,6 +42,12 @@ router.post("/feed", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const student = await User.findById(req.user._id);
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found." });
+        }
+
         const dateKey = getTodayDateKey();
 
         let log = await DailyCareLog.findOne({
@@ -54,20 +62,40 @@ router.post("/feed", protect, async (req, res) => {
             });
         }
 
-        if (log.feedUsed) {
-            return res.status(400).json({ message: "You have already fed your pet today." });
+        const cost = 10;
+        let actionType = "free";
+
+        if (!log.feedUsed) {
+            log.feedUsed = true;
+        } else {
+            if (student.points < cost) {
+                return res.status(400).json({ message: "Not enough points." });
+            }
+
+            student.points -= cost;
+            actionType = "paid";
+
+            await PointTransaction.create({
+                student: student._id,
+                amount: -cost,
+                reason: "Premium Feed",
+                type: "spend",
+            });
         }
 
         pet.hunger = Math.min(100, pet.hunger + 15);
         pet.experience += 5;
         pet.lastUpdated = new Date();
 
-        log.feedUsed = true;
-
         await pet.save();
         await log.save();
+        await student.save();
 
-        res.json(pet);
+        res.json({
+            pet,
+            points: student.points,
+            actionType,
+        });
     } catch (err) {
         res.status(500).json({ message: "Failed to feed pet." });
     }
@@ -86,6 +114,12 @@ router.post("/play", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const student = await User.findById(req.user._id);
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found." });
+        }
+
         const dateKey = getTodayDateKey();
 
         let log = await DailyCareLog.findOne({
@@ -100,20 +134,40 @@ router.post("/play", protect, async (req, res) => {
             });
         }
 
-        if (log.playUsed) {
-            return res.status(400).json({ message: "You have already played with your pet today." });
+        const cost = 10;
+        let actionType = "free";
+
+        if (!log.playUsed) {
+            log.playUsed = true;
+        } else {
+            if (student.points < cost) {
+                return res.status(400).json({ message: "Not enough points." });
+            }
+
+            student.points -= cost;
+            actionType = "paid";
+
+            await PointTransaction.create({
+                student: student._id,
+                amount: -cost,
+                reason: "Premium Play",
+                type: "spend",
+            });
         }
 
         pet.happiness = Math.min(100, pet.happiness + 15);
         pet.experience += 5;
         pet.lastUpdated = new Date();
 
-        log.playUsed = true;
-
         await pet.save();
         await log.save();
+        await student.save();
 
-        res.json(pet);
+        res.json({
+            pet,
+            points: student.points,
+            actionType,
+        });
     } catch (err) {
         res.status(500).json({ message: "Failed to play with pet." });
     }
@@ -132,6 +186,12 @@ router.post("/brush", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const student = await User.findById(req.user._id);
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found." });
+        }
+
         const dateKey = getTodayDateKey();
 
         let log = await DailyCareLog.findOne({
@@ -146,20 +206,40 @@ router.post("/brush", protect, async (req, res) => {
             });
         }
 
-        if (log.brushUsed) {
-            return res.status(400).json({ message: "You have already brushed your pet today." });
+        const cost = 10;
+        let actionType = "free";
+
+        if (!log.brushUsed) {
+            log.brushUsed = true;
+        } else {
+            if (student.points < cost) {
+                return res.status(400).json({ message: "Not enough points." });
+            }
+
+            student.points -= cost;
+            actionType = "paid";
+
+            await PointTransaction.create({
+                student: student._id,
+                amount: -cost,
+                reason: "Premium Brush",
+                type: "spend",
+            });
         }
 
         pet.cleanliness = Math.min(100, pet.cleanliness + 15);
         pet.experience += 5;
         pet.lastUpdated = new Date();
 
-        log.brushUsed = true;
-
         await pet.save();
         await log.save();
+        await student.save();
 
-        res.json(pet);
+        res.json({
+            pet,
+            points: student.points,
+            actionType,
+        });
     } catch (err) {
         res.status(500).json({ message: "Failed to brush pet." });
     }

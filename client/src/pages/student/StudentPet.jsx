@@ -7,6 +7,8 @@ export default function StudentPet() {
     const [pet, setPet] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
+    const [actionError, setActionError] = useState("");
+    const [actionSuccess, setActionSuccess] = useState("");
 
     const petImages = {
         wolfy: wolfyImage,
@@ -47,44 +49,71 @@ export default function StudentPet() {
     }, []);
 
     const handleFeed = async () => {
+        setActionError("");
+        setActionSuccess("");
+
         try {
             const res = await api.post("/api/pets/feed");
-            setPet(res.data);
+            setPet(res.data.pet);
 
             setDailyStatus((prev) => ({
             ...prev,
             feedUsed: true,
             }));
+
+            setActionSuccess(
+                res.data.actionType === "free"
+                    ? "You fed your pet for free."
+                    : "You fed your pet using points."
+            );
         } catch (err) {
-            console.error(err.response?.data?.message);
+            setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
     };
 
     const handlePlay = async () => {
+        setActionError("");
+        setActionSuccess("");
+
         try {
             const res = await api.post("/api/pets/play");
-            setPet(res.data);
+            setPet(res.data.pet);
 
             setDailyStatus((prev) => ({
             ...prev,
             playUsed: true,
             }));
+
+            setActionSuccess(
+                res.data.actionType === "free"
+                    ? "You played with your pet for free."
+                    : "You played with your pet using points."
+            );
         } catch (err) {
-            console.error(err.response?.data?.message);
+            setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
     };
 
     const handleBrush = async () => {
+        setActionError("");
+        setActionSuccess("");
+
         try {
             const res = await api.post("/api/pets/brush");
-            setPet(res.data);
+            setPet(res.data.pet);
 
             setDailyStatus((prev) => ({
             ...prev,
             brushUsed: true,
             }));
+
+            setActionSuccess(
+                res.data.actionType === "free"
+                    ? "You played with your pet for free."
+                    : "You played with your pet using points."
+            );
         } catch (err) {
-            console.error(err.response?.data?.message);
+            setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
     };
 
@@ -177,6 +206,9 @@ export default function StudentPet() {
                             </div>
                             </div>
                         </div>
+
+                        {actionError && <div className="alert alert-danger mt-4">{actionError}</div>}
+                        {actionSuccess && <div className="alert alert-success mt-4">{actionSuccess}</div>}
 
                         <div className="mt-4 d-flex gap-2">
                             <button className="btn btn-success" onClick={handleFeed}>

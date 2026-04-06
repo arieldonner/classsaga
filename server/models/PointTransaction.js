@@ -10,12 +10,12 @@ const pointTransactionSchema = new mongoose.Schema(
         teacher: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            default: null,
         },
         classroom: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Classroom",
-            required: true,
+            default: null,
         },
         amount: {
             type: Number,
