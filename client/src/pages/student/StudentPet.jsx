@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
 import wolfyImage from "../../assets/pets/wolfy.png";
 
@@ -9,6 +10,8 @@ export default function StudentPet() {
     const [loading, setLoading] = useState(true);
     const [actionError, setActionError] = useState("");
     const [actionSuccess, setActionSuccess] = useState("");
+    const { user, updateUser } = useAuth();
+    const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
 
     const petImages = {
         wolfy: wolfyImage,
@@ -55,6 +58,8 @@ export default function StudentPet() {
         try {
             const res = await api.post("/api/pets/feed");
             setPet(res.data.pet);
+            setCurrentPoints(res.data.points);
+            updateUser({ points: res.data.points });
 
             setDailyStatus((prev) => ({
             ...prev,
@@ -78,6 +83,8 @@ export default function StudentPet() {
         try {
             const res = await api.post("/api/pets/play");
             setPet(res.data.pet);
+            setCurrentPoints(res.data.points);
+            updateUser({ points: res.data.points });
 
             setDailyStatus((prev) => ({
             ...prev,
@@ -101,6 +108,8 @@ export default function StudentPet() {
         try {
             const res = await api.post("/api/pets/brush");
             setPet(res.data.pet);
+            setCurrentPoints(res.data.points);
+            updateUser({ points: res.data.points });
 
             setDailyStatus((prev) => ({
             ...prev,
@@ -109,8 +118,8 @@ export default function StudentPet() {
 
             setActionSuccess(
                 res.data.actionType === "free"
-                    ? "You played with your pet for free."
-                    : "You played with your pet using points."
+                    ? "You brushed your pet for free."
+                    : "You brushed your pet using points."
             );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
@@ -211,15 +220,15 @@ export default function StudentPet() {
                         {actionSuccess && <div className="alert alert-success mt-4">{actionSuccess}</div>}
 
                         <div className="mt-4 d-flex gap-2">
-                            <button className="btn btn-success" onClick={handleFeed}>
+                            <button className="btn btn-success" onClick={handleFeed} disabled={dailyStatus.feedUsed && currentPoints < 10}>
                                 {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
                             </button>
 
-                            <button className="btn btn-primary" onClick={handlePlay}>
+                            <button className="btn btn-primary" onClick={handlePlay} disabled={dailyStatus.playUsed && currentPoints < 10}>
                                 {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
                             </button>
 
-                            <button className="btn btn-secondary" onClick={handleBrush}>
+                            <button className="btn btn-secondary" onClick={handleBrush} disabled={dailyStatus.brushUsed && currentPoints < 10}>
                                 {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
                             </button>
                         </div>
