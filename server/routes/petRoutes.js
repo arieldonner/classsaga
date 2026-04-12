@@ -37,6 +37,16 @@ const applyPetDecay = (pet) => {
     return true;
 };
 
+const applyLevelUps = (pet) => {
+    while (pet.experience >= 100) {
+        pet.experience -= 100;
+        pet.level += 1;
+        pet.strength += 1;
+        pet.speed += 1;
+        pet.defense += 1;
+    }
+};
+
 // Get current student's pet
 router.get("/my-pet", protect, async (req, res) => {
     try {
@@ -120,6 +130,7 @@ router.post("/feed", protect, async (req, res) => {
 
         pet.hunger = Math.min(100, pet.hunger + 15);
         pet.experience += 5;
+        applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
         await pet.save();
@@ -194,6 +205,7 @@ router.post("/play", protect, async (req, res) => {
 
         pet.happiness = Math.min(100, pet.happiness + 15);
         pet.experience += 5;
+        applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
         await pet.save();
@@ -268,6 +280,7 @@ router.post("/brush", protect, async (req, res) => {
 
         pet.cleanliness = Math.min(100, pet.cleanliness + 15);
         pet.experience += 5;
+        applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
         await pet.save();
