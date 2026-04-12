@@ -10,6 +10,33 @@ const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
 };
 
+const clampStat = (value) => {
+    return Math.max(0, Math.min(100, value));
+};
+
+const applyPetDecay = (pet) => {
+    const now = new Date();
+    const lastUpdated = pet.lastUpdated ? new Date(pet.lastUpdated) : new Date();
+
+    const msElapsed = now - lastUpdated;
+    const daysElapsed = msElapsed / (1000 * 60 * 60 * 24);
+
+    if (daysElapsed <= 0) {
+        return false;
+    }
+
+    const hungerDecay = daysElapsed * 10;
+    const happinessDecay = daysElapsed * 8;
+    const cleanlinessDecay = daysElapsed * 6;
+
+    pet.hunger = clampStat(Math.round(pet.hunger - hungerDecay));
+    pet.happiness = clampStat(Math.round(pet.happiness - happinessDecay));
+    pet.cleanliness = clampStat(Math.round(pet.cleanliness - cleanlinessDecay));
+    pet.lastUpdated = now;
+
+    return true;
+};
+
 // Get current student's pet
 router.get("/my-pet", protect, async (req, res) => {
     try {
@@ -21,6 +48,12 @@ router.get("/my-pet", protect, async (req, res) => {
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
+        }
+
+        const changed = applyPetDecay(pet);
+
+        if (changed) {
+            await pet.save();
         }
 
         res.json(pet);
@@ -41,6 +74,8 @@ router.post("/feed", protect, async (req, res) => {
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
+
+        applyPetDecay(pet);
 
         const student = await User.findById(req.user._id);
 
@@ -114,6 +149,8 @@ router.post("/play", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        applyPetDecay(pet);
+
         const student = await User.findById(req.user._id);
 
         if (!student) {
@@ -185,6 +222,8 @@ router.post("/brush", protect, async (req, res) => {
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
+
+        applyPetDecay(pet);
 
         const student = await User.findById(req.user._id);
 
