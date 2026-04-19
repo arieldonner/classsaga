@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useRef } from "react";
 import api from "../../api/api";
 import wolfyImage from "../../assets/pets/wolfy.png";
 
@@ -9,9 +10,10 @@ export default function StudentPet() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [actionError, setActionError] = useState("");
-    const [actionSuccess, setActionSuccess] = useState("");
+    const [messages, setMessages] = useState([]);
     const { user, updateUser } = useAuth();
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
+    const logRef = useRef(null);
 
     const petImages = {
         wolfy: wolfyImage,
@@ -22,6 +24,13 @@ export default function StudentPet() {
         playUsed: false,
         brushUsed: false,
     });
+
+    const addMessage = (text) => {
+        setMessages((prev) => [
+            ...prev.slice(-19),
+            { id: Date.now(), text },
+        ]);
+    };
 
     useEffect(() => {
         const fetchPet = async () => {
@@ -51,11 +60,31 @@ export default function StudentPet() {
         fetchDailyStatus();
     }, []);
 
+    useEffect(() => {
+        const storedMessages = localStorage.getItem("petMessages");
+        if (storedMessages) {
+            setMessages(JSON.parse(storedMessages));
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("petMessages", JSON.stringify(messages));
+    }, [messages]);
+
+    useEffect(() => {
+        if (logRef.current) {
+            logRef.current.scrollTop = logRef.current.scrollHeight;
+        }
+    }, [messages]);
+
     const handleFeed = async () => {
         setActionError("");
-        setActionSuccess("");
+        //setActionSuccess("");
 
         try {
+            const previousLevel = pet.level;
+            const previousHunger = pet.hunger;
+            
             const res = await api.post("/api/pets/feed");
             setPet(res.data.pet);
             setCurrentPoints(res.data.points);
@@ -66,11 +95,27 @@ export default function StudentPet() {
             feedUsed: true,
             }));
 
-            setActionSuccess(
+            const hungerIncrease = res.data.pet.hunger - previousHunger;
+
+            const actionMessage =
                 res.data.actionType === "free"
-                    ? "You fed your pet for free."
-                    : "You fed your pet using points."
-            );
+                    ? `Fed pet (Free) • Hunger +${hungerIncrease}`
+                    : `Fed pet (-10 pts) • Hunger +${hungerIncrease}`;
+
+            addMessage(actionMessage);
+
+            if (res.data.pet.level > previousLevel) {
+                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
+                addMessage(
+                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
+                );
+            }
+
+            // setActionSuccess(
+            //     res.data.actionType === "free"
+            //         ? "You fed your pet for free."
+            //         : "You fed your pet using points."
+            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
@@ -78,9 +123,12 @@ export default function StudentPet() {
 
     const handlePlay = async () => {
         setActionError("");
-        setActionSuccess("");
+        //setActionSuccess("");
 
         try {
+            const previousLevel = pet.level;
+            const previousHappiness = pet.happiness;
+
             const res = await api.post("/api/pets/play");
             setPet(res.data.pet);
             setCurrentPoints(res.data.points);
@@ -91,11 +139,27 @@ export default function StudentPet() {
             playUsed: true,
             }));
 
-            setActionSuccess(
+            const happinessIncrease = res.data.pet.happiness - previousHappiness;
+
+            const actionMessage =
                 res.data.actionType === "free"
-                    ? "You played with your pet for free."
-                    : "You played with your pet using points."
-            );
+                    ? `Played with pet (Free) • Happiness +${happinessIncrease}`
+                    : `Played with pet (-10 pts) • Happiness +${happinessIncrease}`;
+
+            addMessage(actionMessage);
+
+            if (res.data.pet.level > previousLevel) {
+                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
+                addMessage(
+                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
+                );
+            }
+
+            // setActionSuccess(
+            //     res.data.actionType === "free"
+            //         ? "You played with your pet for free."
+            //         : "You played with your pet using points."
+            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
@@ -103,9 +167,12 @@ export default function StudentPet() {
 
     const handleBrush = async () => {
         setActionError("");
-        setActionSuccess("");
+        //setActionSuccess("");
 
         try {
+            const previousLevel = pet.level;
+            const previousCleanliness = pet.cleanliness;    
+
             const res = await api.post("/api/pets/brush");
             setPet(res.data.pet);
             setCurrentPoints(res.data.points);
@@ -116,11 +183,27 @@ export default function StudentPet() {
             brushUsed: true,
             }));
 
-            setActionSuccess(
+            const cleanlinessIncrease = res.data.pet.cleanliness - previousCleanliness;
+
+            const actionMessage =
                 res.data.actionType === "free"
-                    ? "You brushed your pet for free."
-                    : "You brushed your pet using points."
-            );
+                    ? `Brushed pet (Free) • Cleanliness +${cleanlinessIncrease}`
+                    : `Brushed pet (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
+
+            addMessage(actionMessage);
+
+            if (res.data.pet.level > previousLevel) {
+                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
+                addMessage(
+                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
+                );
+            }
+
+            // setActionSuccess(
+            //     res.data.actionType === "free"
+            //         ? "You brushed your pet for free."
+            //         : "You brushed your pet using points."
+            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
@@ -165,8 +248,26 @@ export default function StudentPet() {
                             <strong>Level:</strong> {pet.level}
                         </p>
                         <p className="mb-4">
-                            <strong>Experience:</strong> {pet.experience}
+                            <strong>Experience:</strong> {pet.experience} / 100
                         </p>
+                        
+                        <div className="mt-3">
+                            <h5 className="mb-2">Battle Stats</h5>
+
+                            <div className="d-flex gap-4">
+                                <div>
+                                    <span className="fw-semibold">STR:</span> {pet.strength}
+                                </div>
+
+                                <div>
+                                    <span className="fw-semibold">SPD:</span> {pet.speed}
+                                </div>
+
+                                <div>
+                                    <span className="fw-semibold">DEF:</span> {pet.defense}
+                                </div>
+                            </div>
+                        </div>
 
                         <div className="mb-3">
                             <label className="form-label fw-semibold">Hunger</label>
@@ -217,7 +318,7 @@ export default function StudentPet() {
                         </div>
 
                         {actionError && <div className="alert alert-danger mt-4">{actionError}</div>}
-                        {actionSuccess && <div className="alert alert-success mt-4">{actionSuccess}</div>}
+                        {/* {actionSuccess && <div className="alert alert-success mt-4">{actionSuccess}</div>} */}
 
                         <div className="mt-4 d-flex gap-2">
                             <button className="btn btn-success" onClick={handleFeed} disabled={dailyStatus.feedUsed && currentPoints < 10}>
@@ -233,6 +334,21 @@ export default function StudentPet() {
                             </button>
                         </div>
                         </div>
+                    </div>
+                    <div className="mt-4">
+                        <h5 className="mb-2">Activity Log</h5>
+
+                        <textarea
+                            ref={logRef}
+                            className="form-control bg-light"
+                            value={
+                                messages.length === 0
+                                    ? "No recent activity."
+                                    : messages.map((msg) => msg.text).join("\n")
+                            }
+                            readOnly
+                            rows={6}
+                        />
                     </div>
                 </div>
             )}
