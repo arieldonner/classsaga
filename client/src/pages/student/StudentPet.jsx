@@ -14,6 +14,8 @@ export default function StudentPet() {
     const { user, updateUser } = useAuth();
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const logRef = useRef(null);
+    const [hopDirection, setHopDirection] = useState("");
+    const [reaction, setReaction] = useState("");
 
     const petImages = {
         wolfy: wolfyImage,
@@ -77,6 +79,20 @@ export default function StudentPet() {
         }
     }, [messages]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (reaction) return;
+            const direction = Math.random() > 0.5 ? "hop-right" : "hop-left";
+            setHopDirection(direction);
+
+            setTimeout(() => {
+                setHopDirection("");
+            }, 600);
+        }, 9000);
+
+        return () => clearInterval(interval);
+    }, [reaction]);
+
     const handleFeed = async () => {
         setActionError("");
 
@@ -109,6 +125,10 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
+            setReaction("react-feed");
+            setTimeout(() => {
+                setReaction("");
+            }, 500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
@@ -146,6 +166,11 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
+
+            setReaction("react-play");
+            setTimeout(() => {
+                setReaction("");
+            }, 600);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
@@ -183,6 +208,11 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
+
+            setReaction("react-brush");
+            setTimeout(() => {
+                setReaction("");
+            }, 400);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
@@ -208,12 +238,14 @@ export default function StudentPet() {
                                 className="border rounded bg-light d-flex align-items-center justify-content-center"
                                 style={{ minHeight: "360px" }}
                             >
-                                <img
-                                    src={petImages[pet.species]}
-                                    alt="Pet"
-                                    className="img-fluid"
-                                    style={{ maxHeight: "300px" }}
-                                />
+                                <div className={`pet-container ${hopDirection} ${reaction}`}>
+                                    <img
+                                        src={petImages[pet.species]}
+                                        alt="Pet"
+                                        className="img-fluid pet-idle"
+                                        style={{ maxHeight: "300px" }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
