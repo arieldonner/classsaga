@@ -79,7 +79,6 @@ export default function StudentPet() {
 
     const handleFeed = async () => {
         setActionError("");
-        //setActionSuccess("");
 
         try {
             const previousLevel = pet.level;
@@ -110,12 +109,6 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
-
-            // setActionSuccess(
-            //     res.data.actionType === "free"
-            //         ? "You fed your pet for free."
-            //         : "You fed your pet using points."
-            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
@@ -123,7 +116,6 @@ export default function StudentPet() {
 
     const handlePlay = async () => {
         setActionError("");
-        //setActionSuccess("");
 
         try {
             const previousLevel = pet.level;
@@ -154,12 +146,6 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
-
-            // setActionSuccess(
-            //     res.data.actionType === "free"
-            //         ? "You played with your pet for free."
-            //         : "You played with your pet using points."
-            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
@@ -167,7 +153,6 @@ export default function StudentPet() {
 
     const handleBrush = async () => {
         setActionError("");
-        //setActionSuccess("");
 
         try {
             const previousLevel = pet.level;
@@ -198,12 +183,6 @@ export default function StudentPet() {
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
-
-            // setActionSuccess(
-            //     res.data.actionType === "free"
-            //         ? "You brushed your pet for free."
-            //         : "You brushed your pet using points."
-            // );
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
@@ -224,30 +203,30 @@ export default function StudentPet() {
             {!loading && !error && pet && (
                 <div className="card shadow-sm p-4">
                     <div className="row align-items-center">
-                        <div className="col-md-4 text-center mb-4 mb-md-0">
+                        <div className="col-md-6 text-center mb-4 mb-md-0">
                             <div
                                 className="border rounded bg-light d-flex align-items-center justify-content-center"
-                                style={{ minHeight: "260px" }}
+                                style={{ minHeight: "360px" }}
                             >
                                 <img
                                     src={petImages[pet.species]}
                                     alt="Pet"
                                     className="img-fluid"
-                                    style={{ maxHeight: "240px" }}
+                                    style={{ maxHeight: "300px" }}
                                 />
                             </div>
                         </div>
 
-                        <div className="col-md-8">
+                        <div className="col-md-6">
                         <h3 className="mb-2">{pet.name}</h3>
-                        <p className="text-muted mb-3">
+                        <p className="text-muted mb-2">
                             Species: {pet.species}
                         </p>
 
-                        <p className="mb-2">
+                        <p className="mb-1">
                             <strong>Level:</strong> {pet.level}
                         </p>
-                        <p className="mb-4">
+                        <p className="mb-2">
                             <strong>Experience:</strong> {pet.experience} / 100
                         </p>
                         
@@ -272,55 +251,54 @@ export default function StudentPet() {
                         <div className="mb-3">
                             <label className="form-label fw-semibold">Hunger</label>
                             <div className="progress">
-                            <div
-                                className="progress-bar"
-                                role="progressbar"
-                                style={{ width: `${pet.hunger}%` }}
-                                aria-valuenow={pet.hunger}
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                            >
-                                {pet.hunger}
-                            </div>
+                                <div
+                                    className="progress-bar"
+                                    role="progressbar"
+                                    style={{ width: `${pet.hunger}%` }}
+                                    aria-valuenow={pet.hunger}
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                >
+                                    {pet.hunger}
+                                </div>
                             </div>
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label fw-semibold">Happiness</label>
                             <div className="progress">
-                            <div
-                                className="progress-bar"
-                                role="progressbar"
-                                style={{ width: `${pet.happiness}%` }}
-                                aria-valuenow={pet.happiness}
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                            >
-                                {pet.happiness}
-                            </div>
+                                <div
+                                    className="progress-bar"
+                                    role="progressbar"
+                                    style={{ width: `${pet.happiness}%` }}
+                                    aria-valuenow={pet.happiness}
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                >
+                                    {pet.happiness}
+                                </div>
                             </div>
                         </div>
 
                         <div className="mb-0">
                             <label className="form-label fw-semibold">Cleanliness</label>
                             <div className="progress">
-                            <div
-                                className="progress-bar"
-                                role="progressbar"
-                                style={{ width: `${pet.cleanliness}%` }}
-                                aria-valuenow={pet.cleanliness}
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                            >
-                                {pet.cleanliness}
-                            </div>
+                                <div
+                                    className="progress-bar"
+                                    role="progressbar"
+                                    style={{ width: `${pet.cleanliness}%` }}
+                                    aria-valuenow={pet.cleanliness}
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                >
+                                    {pet.cleanliness}
+                                </div>
                             </div>
                         </div>
 
                         {actionError && <div className="alert alert-danger mt-4">{actionError}</div>}
-                        {/* {actionSuccess && <div className="alert alert-success mt-4">{actionSuccess}</div>} */}
 
-                        <div className="mt-4 d-flex gap-2">
+                        <div className="mt-3 d-flex gap-2 flex-wrap">
                             <button className="btn btn-success" onClick={handleFeed} disabled={dailyStatus.feedUsed && currentPoints < 10}>
                                 {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
                             </button>
