@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const classroomRoutes = require("./routes/classroomRoutes");
 const pointRoutes = require("./routes/pointRoutes");
 const petRoutes = require("./routes/petRoutes");
+const shopRoutes = require("./routes/shopRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/classrooms", classroomRoutes);
 app.use("/api/points", pointRoutes);
 app.use("/api/pets", petRoutes);
+app.use("/api/shop", shopRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
