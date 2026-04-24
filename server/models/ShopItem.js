@@ -14,7 +14,7 @@ const shopItemSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ["food", "toy", "care", "cosmetic", "background", "accessory"],
+            enum: ["food", "toy", "care", "background", "accessory"],
             required: true,
         },
         itemType: {
@@ -33,6 +33,22 @@ const shopItemSchema = new mongoose.Schema(
             default: "none",
         },
         effectValue: {
+            type: Number,
+            default: 0,
+        },
+        xpValue: {
+            type: Number,
+            default: 0,
+        },
+        strengthValue: {
+            type: Number,
+            default: 0,
+        },
+        speedValue: {
+            type: Number,
+            default: 0,
+        },
+        defenseValue: {
             type: Number,
             default: 0,
         },

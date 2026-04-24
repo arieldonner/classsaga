@@ -62,10 +62,15 @@ export default function StudentDashboard() {
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>Student Dashboard</h2>
+                <div className="d-flex gap-2">
+                    <Link to="/student/shop" className="btn btn-outline-primary">
+                        Go to Shop
+                    </Link>
 
-                <Link to="/student/classrooms/join" className="btn btn-primary">
-                Join Classroom
-                </Link>
+                    <Link to="/student/classrooms/join" className="btn btn-primary">
+                        Join Classroom
+                    </Link>
+                </div>
             </div>
 
             <div className="card shadow-sm p-4 mb-4">
