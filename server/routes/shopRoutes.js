@@ -77,7 +77,12 @@ router.post("/buy", protect, async (req, res) => {
         });
 
         if (inventoryItem) {
+            if (item.itemType === "cosmetic") {
+                return res.status(400).json({ message: "You already own this item." });
+            }
+
             inventoryItem.quantity += 1;
+            await inventoryItem.save();
         } else {
             inventoryItem = await InventoryItem.create({
                 student: student._id,

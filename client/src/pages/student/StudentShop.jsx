@@ -11,21 +11,34 @@ export default function StudentShop() {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
+    const [inventory, setInventory] = useState([]);
 
     useEffect(() => {
-        const fetchItems = async () => {
+        const fetchShopData = async () => {
             try {
-                const res = await api.get("/api/shop/items");
-                setItems(res.data);
+                const itemsRes = await api.get("/api/shop/items");
+                setItems(itemsRes.data);
+
+                const inventoryRes = await api.get("/api/inventory/my-items");
+                setInventory(inventoryRes.data);
             } catch (err) {
-                setError(err.response?.data?.message || "Failed to load shop items.");
+                setError(err.response?.data?.message || "Failed to load shop.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchItems();
+        fetchShopData();
     }, []);
+
+    const getInventoryForItem = (itemId) => {
+        return inventory.find((inv) => inv.shopItem?._id === itemId);
+    };
+
+    const fetchInventory = async () => {
+        const res = await api.get("/api/inventory/my-items");
+        setInventory(res.data);
+    };
 
     const handleBuy = async (shopItemId) => {
         setError("");
@@ -36,6 +49,7 @@ export default function StudentShop() {
 
             setCurrentPoints(res.data.points);
             updateUser({ points: res.data.points });
+            await fetchInventory();
 
             setMessage(res.data.message || "Item purchased successfully.");
         } catch (err) {
@@ -66,40 +80,59 @@ export default function StudentShop() {
                     {items.length === 0 ? (
                         <p>No items available yet.</p>
                     ) : (
-                        items.map((item) => (
-                            <div className="col-md-4" key={item._id}>
-                                <div className="card h-100 shadow-sm p-3">
-                                    <h5>{item.name}</h5>
-                                    <p className="text-muted mb-2">{item.description}</p>
+                        items.map((item) => {
+                            const ownedItem = getInventoryForItem(item._id);
+                            const ownedQuantity = ownedItem?.quantity || 0;
+                            const alreadyOwnsCosmetic =
+                                item.itemType === "cosmetic" && ownedQuantity > 0;
+                            const cannotAfford = currentPoints < item.cost;
 
-                                    <p className="mb-1">
-                                        <strong>Category:</strong> {item.category}
-                                    </p>
+                            return (
+                                <div className="col-md-4" key={item._id}>
+                                    <div className="card h-100 shadow-sm p-3">
+                                        <h5>{item.name}</h5>
+                                        <p className="text-muted mb-2">{item.description}</p>
 
-                                    <p className="mb-1">
-                                        <strong>Cost:</strong> {item.cost} pts
-                                    </p>
-
-                                    {item.itemType === "consumable" && (
                                         <p className="mb-1">
-                                            <strong>Effect:</strong> {item.effectType} +{item.effectValue}
+                                            <strong>Category:</strong> {item.category}
                                         </p>
-                                    )}
 
-                                    <p className="mb-3">
-                                        <strong>Unlock Level:</strong> {item.unlockLevel}
-                                    </p>
+                                        <p className="mb-1">
+                                            <strong>Cost:</strong> {item.cost} pts
+                                        </p>
 
-                                    <button
-                                        className="btn btn-primary mt-auto"
-                                        onClick={() => handleBuy(item._id)}
-                                        disabled={currentPoints < item.cost}
-                                    >
-                                        {currentPoints < item.cost ? "Not Enough Points" : "Buy"}
-                                    </button>
+                                        {ownedQuantity > 0 && (
+                                            <p className="mb-1">
+                                                <strong>Owned:</strong>{" "}
+                                                {item.itemType === "cosmetic" ? "Yes" : ownedQuantity}
+                                            </p>
+                                        )}
+
+                                        {item.itemType === "consumable" && (
+                                            <p className="mb-1">
+                                                <strong>Effect:</strong> {item.effectType} +{item.effectValue}
+                                            </p>
+                                        )}
+
+                                        <p className="mb-3">
+                                            <strong>Unlock Level:</strong> {item.unlockLevel}
+                                        </p>
+
+                                        <button
+                                            className="btn btn-primary mt-auto"
+                                            onClick={() => handleBuy(item._id)}
+                                            disabled={cannotAfford || alreadyOwnsCosmetic}
+                                        >
+                                            {alreadyOwnsCosmetic
+                                                ? "Purchased"
+                                                : cannotAfford
+                                                ? "Not Enough Points"
+                                                : "Buy"}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             )}
