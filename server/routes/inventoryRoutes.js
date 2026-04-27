@@ -3,6 +3,8 @@ const router = express.Router();
 
 const InventoryItem = require("../models/InventoryItem");
 const { protect } = require("../middleware/authMiddleware");
+const Pet = require("../models/Pet");
+const ShopItem = require("../models/ShopItem");
 
 // Get current student's inventory
 router.get("/my-items", protect, async (req, res) => {
@@ -21,6 +23,95 @@ router.get("/my-items", protect, async (req, res) => {
         res.json(items);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch inventory." });
+    }
+});
+
+// Use a care item from inventory
+router.post("/use", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can use items." });
+        }
+
+        const { inventoryItemId } = req.body;
+
+        if (!inventoryItemId) {
+            return res.status(400).json({ message: "Inventory item is required." });
+        }
+
+        const inventoryItem = await InventoryItem.findById(inventoryItemId).populate("shopItem");
+
+        if (!inventoryItem || inventoryItem.student.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Item not found." });
+        }
+
+        const item = inventoryItem.shopItem;
+
+        if (!item) {
+            return res.status(400).json({ message: "Invalid item." });
+        }
+
+        if (item.itemType !== "consumable") {
+            return res.status(400).json({ message: "This item cannot be used." });
+        }
+
+        if (inventoryItem.quantity <= 0) {
+            return res.status(400).json({ message: "You do not have any left." });
+        }
+
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        // Apply stat effect
+        if (item.effectType === "hunger") {
+            pet.hunger = Math.min(100, pet.hunger + item.effectValue);
+        }
+
+        if (item.effectType === "happiness") {
+            pet.happiness = Math.min(100, pet.happiness + item.effectValue);
+        }
+
+        if (item.effectType === "cleanliness") {
+            pet.cleanliness = Math.min(100, pet.cleanliness + item.effectValue);
+        }
+
+        // Apply xp
+        if (item.xpValue) {
+            pet.experience += item.xpValue;
+        }
+
+        // Apply battle stat
+        if (item.strengthValue) pet.strength += item.strengthValue;
+        if (item.speedValue) pet.speed += item.speedValue;
+        if (item.defenseValue) pet.defense += item.defenseValue;
+
+        // level up
+        let leveledUp = false;
+
+        while (pet.experience >= 100) {
+            pet.experience -= 100;
+            pet.level += 1;
+            leveledUp = true;
+        }
+
+        // Reduce inventory
+        inventoryItem.quantity -= 1;
+
+        await pet.save();
+        await inventoryItem.save();
+
+        res.json({
+            message: "Item used successfully.",
+            pet,
+            inventoryItem,
+            leveledUp,
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: "Failed to use item." });
     }
 });
 

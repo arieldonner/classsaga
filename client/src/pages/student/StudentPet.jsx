@@ -18,6 +18,7 @@ export default function StudentPet() {
     const [reaction, setReaction] = useState("");
     const [activeTab, setActiveTab] = useState("care");
     const [inventory, setInventory] = useState([]);
+    const [statChanges, setStatChanges] = useState({});
 
     const petImages = {
         wolfy: wolfyImage,
@@ -43,6 +44,14 @@ export default function StudentPet() {
         } catch (err) {
             console.error("Failed to load inventory");
         }
+    };
+
+    const showStatChanges = (changes) => {
+        setStatChanges(changes);
+
+        setTimeout(() => {
+            setStatChanges({});
+        }, 8000);
     };
 
     useEffect(() => {
@@ -231,13 +240,69 @@ export default function StudentPet() {
     };
 
     const handleUseItem = async (inventoryItem) => {
+        setActionError("");
+        setActiveTab("care");
+
         try {
+            const previousPet = { ...pet };
             const res = await api.post("/api/inventory/use", {
                 inventoryItemId: inventoryItem._id,
             });
 
-            setPet(res.data.pet);
+            const updatedPet = res.data.pet;
+            setTimeout(() => {
+                setPet(updatedPet);
+            }, 100);
             await fetchInventory();
+
+            const item = inventoryItem.shopItem;
+
+            const messages = [`Used ${item.name}`];
+
+            const changes = {};
+
+            if (updatedPet.hunger > previousPet.hunger) {
+                messages.push(`Hunger +${updatedPet.hunger - previousPet.hunger}`);
+                changes.hunger = updatedPet.hunger - previousPet.hunger;
+            }
+
+            if (updatedPet.happiness > previousPet.happiness) {
+                messages.push(`Happiness +${updatedPet.happiness - previousPet.happiness}`);
+                changes.happiness = updatedPet.happiness - previousPet.happiness;
+            }
+
+            if (updatedPet.cleanliness > previousPet.cleanliness) {
+                messages.push(`Cleanliness +${updatedPet.cleanliness - previousPet.cleanliness}`);
+                changes.cleanliness = updatedPet.cleanliness - previousPet.cleanliness;
+            }
+
+            if (updatedPet.experience > previousPet.experience) {
+                messages.push(`XP +${updatedPet.experience - previousPet.experience}`);
+                changes.experience = item.xpValue;
+            }
+
+            if (updatedPet.strength > previousPet.strength) {
+                messages.push(`STR +${updatedPet.strength - previousPet.strength}`);
+                changes.strength = item.strengthValue;
+            }
+
+            if (updatedPet.speed > previousPet.speed) {
+                messages.push(`SPD +${updatedPet.speed - previousPet.speed}`);
+                changes.speed = item.speedValue;
+            }
+
+            if (updatedPet.defense > previousPet.defense) {
+                messages.push(`DEF +${updatedPet.defense - previousPet.defense}`);
+                changes.defense = item.defenseValue;
+            }
+
+            addMessage(messages.join(" • "));
+
+            if (updatedPet.level > previousPet.level) {
+                addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
+            }
+
+            showStatChanges(changes);
 
         } catch (err) {
             console.error(err.response?.data?.message);
@@ -321,6 +386,9 @@ export default function StudentPet() {
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold">
                                         XP ({pet.experience} / 100)
+                                        {statChanges.experience && (
+                                            <span className="text-success ms-2">+{statChanges.experience}</span>
+                                        )}
                                     </label>
 
                                     <div className="progress">
@@ -336,7 +404,7 @@ export default function StudentPet() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* CARE TAB */}
                                 {activeTab === "care" && (
                                     <>
@@ -346,20 +414,34 @@ export default function StudentPet() {
                                             <div className="d-flex gap-4 flex-wrap">
                                                 <div>
                                                     <span className="fw-semibold">STR:</span> {pet.strength}
+                                                    {statChanges.strength && (
+                                                        <span className="text-success ms-2">+{statChanges.strength}</span>
+                                                    )}
                                                 </div>
 
                                                 <div>
                                                     <span className="fw-semibold">SPD:</span> {pet.speed}
+                                                    {statChanges.speed && (
+                                                        <span className="text-success ms-2">+{statChanges.speed}</span>
+                                                    )}
                                                 </div>
 
                                                 <div>
                                                     <span className="fw-semibold">DEF:</span> {pet.defense}
+                                                    {statChanges.defense && (
+                                                        <span className="text-success ms-2">+{statChanges.defense}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Hunger</label>
+                                            <label className="form-label fw-semibold">
+                                                Hunger{" "}
+                                                {statChanges.hunger && (
+                                                    <span className="text-success ms-2">+{statChanges.hunger}</span>
+                                                )}
+                                            </label>
                                             <div className="progress">
                                                 <div
                                                     className="progress-bar"
@@ -372,7 +454,12 @@ export default function StudentPet() {
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Happiness</label>
+                                            <label className="form-label fw-semibold">
+                                                Happiness{" "}
+                                                {statChanges.happiness && (
+                                                    <span className="text-success ms-2">+{statChanges.happiness}</span>
+                                                )}
+                                            </label>
                                             <div className="progress">
                                                 <div
                                                     className="progress-bar"
@@ -385,7 +472,12 @@ export default function StudentPet() {
                                         </div>
 
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Cleanliness</label>
+                                            <label className="form-label fw-semibold">
+                                                Cleanliness{" "}
+                                                {statChanges.cleanliness && (
+                                                    <span className="text-success ms-2">+{statChanges.cleanliness}</span>
+                                                )}
+                                            </label>
                                             <div className="progress">
                                                 <div
                                                     className="progress-bar"
