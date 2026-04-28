@@ -5,6 +5,7 @@ const InventoryItem = require("../models/InventoryItem");
 const { protect } = require("../middleware/authMiddleware");
 const Pet = require("../models/Pet");
 const ShopItem = require("../models/ShopItem");
+const PetEquipment = require("../models/PetEquipment");
 
 // Get current student's inventory
 router.get("/my-items", protect, async (req, res) => {
@@ -112,6 +113,113 @@ router.post("/use", protect, async (req, res) => {
 
     } catch (err) {
         res.status(500).json({ message: "Failed to use item." });
+    }
+});
+
+// Equip a cosmetic item
+router.post("/equip", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can equip items." });
+        }
+
+        const { inventoryItemId } = req.body;
+
+        if (!inventoryItemId) {
+            return res.status(400).json({ message: "Inventory item is required." });
+        }
+
+        const inventoryItem = await InventoryItem.findById(inventoryItemId).populate("shopItem");
+
+        if (!inventoryItem || inventoryItem.student.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Item not found." });
+        }
+
+        if (inventoryItem.quantity <= 0) {
+            return res.status(400).json({ message: "You do not own this item." });
+        }
+
+        const item = inventoryItem.shopItem;
+
+        if (!item || item.itemType !== "cosmetic") {
+            return res.status(400).json({ message: "Only cosmetic items can be equipped." });
+        }
+
+        if (!item.equipSlot || item.equipSlot === "none") {
+            return res.status(400).json({ message: "This item cannot be equipped." });
+        }
+
+        const pet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        const equipment = await PetEquipment.findOneAndUpdate(
+            {
+                student: req.user._id,
+                pet: pet._id,
+                slot: item.equipSlot,
+            },
+            {
+                student: req.user._id,
+                pet: pet._id,
+                slot: item.equipSlot,
+                shopItem: item._id,
+            },
+            {
+                new: true,
+                upsert: true,
+                runValidators: true,
+            }
+        ).populate("shopItem");
+
+        res.json({
+            message: `${item.name} equipped.`,
+            equipment,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to equip item." });
+    }
+});
+
+// Get currently equipped items for active pet
+router.get("/equipment", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students have equipment." });
+        }
+
+        const pet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        const equipment = await PetEquipment.find({
+            student: req.user._id,
+            pet: pet._id,
+        }).populate("shopItem");
+
+        // Normalize into a slot map for easy UI use
+        const slots = {
+            background: null,
+            accessory: null,
+        };
+
+        equipment.forEach((eq) => {
+            slots[eq.slot] = eq;
+        });
+
+        res.json(slots);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch equipment." });
     }
 });
 

@@ -22,6 +22,11 @@ const shopItemSchema = new mongoose.Schema(
             enum: ["consumable", "cosmetic"],
             required: true,
         },
+        equipSlot: {
+            type: String,
+            enum: ["none", "background", "accessory"],
+            default: "none",
+        },
         cost: {
             type: Number,
             required: true,

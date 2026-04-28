@@ -54,6 +54,20 @@ export default function StudentPet() {
         }, 8000);
     };
 
+    const [equipment, setEquipment] = useState({
+        background: null,
+        accessory: null,
+    });
+
+    const fetchEquipment = async () => {
+        try {
+            const res = await api.get("/api/inventory/equipment");
+            setEquipment(res.data);
+        } catch (err) {
+            console.error("Failed to load equipment");
+        }
+    };
+
     useEffect(() => {
         const fetchPet = async () => {
             try {
@@ -68,6 +82,7 @@ export default function StudentPet() {
 
         fetchPet();
         fetchInventory();
+        fetchEquipment();
     }, []);
 
     useEffect(() => {
@@ -309,6 +324,21 @@ export default function StudentPet() {
         }
     };
 
+    const handleEquipItem = async (inventoryItem) => {
+        try {
+            const res = await api.post("/api/inventory/equip", {
+                inventoryItemId: inventoryItem._id,
+            });
+
+            await fetchEquipment();
+
+            addMessage(res.data.message);
+            setActiveTab("equipment");
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to equip item.");
+        }
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -379,6 +409,13 @@ export default function StudentPet() {
                                             onClick={() => setActiveTab("inventory")}
                                         >
                                             Inventory
+                                        </button>
+
+                                        <button
+                                            className={`btn ${activeTab === "equipment" ? "btn-primary" : "btn-outline-primary"}`}
+                                            onClick={() => setActiveTab("equipment")}
+                                        >
+                                            Equipment
                                         </button>
                                     </div>
                                 </div>
@@ -568,9 +605,9 @@ export default function StudentPet() {
                                                                 {item?.itemType === "cosmetic" && (
                                                                     <button
                                                                         className="btn btn-sm btn-outline-primary"
-                                                                        disabled
+                                                                        onClick={() => handleEquipItem(inv)}
                                                                     >
-                                                                        Equip Soon
+                                                                        Equip
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -581,9 +618,37 @@ export default function StudentPet() {
                                         )}
                                     </div>
                                 )}
+
+                                {/* EQUIPMENT TAB */}
+                                {activeTab === "equipment" && (
+                                    <div>
+                                        <h5 className="mb-3">Equipment</h5>
+
+                                        <div className="list-group">
+                                            <div className="list-group-item d-flex justify-content-between">
+                                                <div>
+                                                    <div className="fw-semibold">Background</div>
+                                                    <small className="text-muted">
+                                                        {equipment.background?.shopItem?.name || "None"}
+                                                    </small>
+                                                </div>
+                                            </div>
+
+                                            <div className="list-group-item d-flex justify-content-between">
+                                                <div>
+                                                    <div className="fw-semibold">Accessory</div>
+                                                    <small className="text-muted">
+                                                        {equipment.accessory?.shopItem?.name || "None"}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+
 
                     {/* Activity Log */}
                     <div className="card shadow-sm p-4">
