@@ -30,6 +30,26 @@ export default function StudentPet() {
         brushUsed: false,
     });
 
+     const [equipment, setEquipment] = useState({
+        background: null,
+        accessory: null,
+    });
+
+    // Temporary use of imageKeys and css for background/accessories
+    const backgroundStyles = {
+    forest: { background: "linear-gradient(135deg, #2e7d32, #81c784)" },
+    beach: { background: "linear-gradient(135deg, #0288d1, #b3e5fc)" },
+    night: { background: "linear-gradient(135deg, #263238, #546e7a)" },
+    };
+
+    const bgKey = equipment.background?.shopItem?.imageKey;
+
+    const petSceneStyle = backgroundStyles[bgKey] || {
+        background: "#f8f9fa",
+    };
+
+    const accessory = equipment.accessory?.shopItem;
+
     const addMessage = (text) => {
         setMessages((prev) => [
             ...prev.slice(-19),
@@ -53,11 +73,6 @@ export default function StudentPet() {
             setStatChanges({});
         }, 8000);
     };
-
-    const [equipment, setEquipment] = useState({
-        background: null,
-        accessory: null,
-    });
 
     const fetchEquipment = async () => {
         try {
@@ -377,8 +392,8 @@ export default function StudentPet() {
                         <div className="col-md-6">
                             <div className="card shadow-sm p-4 h-100">
                                 <div
-                                    className="border rounded bg-light d-flex align-items-center justify-content-center h-100"
-                                    style={{ minHeight: "420px" }}
+                                    className="border rounded d-flex align-items-center justify-content-center h-100"
+                                    style={{ minHeight: "420px", ...petSceneStyle }}
                                 >
                                     <div className={`pet-container ${hopDirection} ${reaction}`}>
                                         <img
@@ -387,6 +402,14 @@ export default function StudentPet() {
                                             className="img-fluid pet-idle"
                                             style={{ maxHeight: "340px" }}
                                         />
+                                         {accessory && (
+                                            <span
+                                                className="badge text-bg-warning position-absolute"
+                                                style={{ top: "10px", right: "10px" }}
+                                            >
+                                                {accessory.name}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
