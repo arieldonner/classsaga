@@ -16,6 +16,9 @@ export default function StudentPet() {
     const logRef = useRef(null);
     const [hopDirection, setHopDirection] = useState("");
     const [reaction, setReaction] = useState("");
+    const [activeTab, setActiveTab] = useState("care");
+    const [inventory, setInventory] = useState([]);
+    const [statChanges, setStatChanges] = useState({});
 
     const petImages = {
         wolfy: wolfyImage,
@@ -27,11 +30,63 @@ export default function StudentPet() {
         brushUsed: false,
     });
 
+     const [equipment, setEquipment] = useState({
+        background: null,
+        accessory: null,
+    });
+
+    // Temporary use of imageKeys and css for background/accessories
+    const backgroundStyles = {
+    forest: { background: "linear-gradient(135deg, #2e7d32, #81c784)" },
+    beach: { background: "linear-gradient(135deg, #0288d1, #b3e5fc)" },
+    night: { background: "linear-gradient(135deg, #263238, #546e7a)" },
+    };
+
+    const bgKey = equipment.background?.shopItem?.imageKey;
+
+    const petSceneStyle = backgroundStyles[bgKey] || {
+        background: "#f8f9fa",
+    };
+
+    const accessory = equipment.accessory?.shopItem;
+
     const addMessage = (text) => {
         setMessages((prev) => [
             ...prev.slice(-19),
             { id: Date.now(), text },
         ]);
+    };
+
+    const fetchInventory = async () => {
+        try {
+            const res = await api.get("/api/inventory/my-items");
+            setInventory(res.data);
+        } catch (err) {
+            console.error("Failed to load inventory");
+        }
+    };
+
+    const showStatChanges = (changes) => {
+        setStatChanges(changes);
+
+        setTimeout(() => {
+            setStatChanges({});
+        }, 8000);
+    };
+
+    const fetchEquipment = async () => {
+        try {
+            const res = await api.get("/api/inventory/equipment");
+            setEquipment(res.data);
+        } catch (err) {
+            console.error("Failed to load equipment");
+        }
+    };
+
+    const isItemEquipped = (inventoryItem) => {
+        return Object.values(equipment).some(
+            (eq) => eq?.shopItem?._id === inventoryItem.shopItem?._id
+        );
     };
 
     useEffect(() => {
@@ -47,6 +102,8 @@ export default function StudentPet() {
         };
 
         fetchPet();
+        fetchInventory();
+        fetchEquipment();
     }, []);
 
     useEffect(() => {
@@ -218,6 +275,104 @@ export default function StudentPet() {
         }
     };
 
+    const handleUseItem = async (inventoryItem) => {
+        setActionError("");
+        setActiveTab("care");
+
+        try {
+            const previousPet = { ...pet };
+            const res = await api.post("/api/inventory/use", {
+                inventoryItemId: inventoryItem._id,
+            });
+
+            const updatedPet = res.data.pet;
+            setTimeout(() => {
+                setPet(updatedPet);
+            }, 100);
+            await fetchInventory();
+
+            const item = inventoryItem.shopItem;
+
+            const messages = [`Used ${item.name}`];
+
+            const changes = {};
+
+            if (updatedPet.hunger > previousPet.hunger) {
+                messages.push(`Hunger +${updatedPet.hunger - previousPet.hunger}`);
+                changes.hunger = updatedPet.hunger - previousPet.hunger;
+            }
+
+            if (updatedPet.happiness > previousPet.happiness) {
+                messages.push(`Happiness +${updatedPet.happiness - previousPet.happiness}`);
+                changes.happiness = updatedPet.happiness - previousPet.happiness;
+            }
+
+            if (updatedPet.cleanliness > previousPet.cleanliness) {
+                messages.push(`Cleanliness +${updatedPet.cleanliness - previousPet.cleanliness}`);
+                changes.cleanliness = updatedPet.cleanliness - previousPet.cleanliness;
+            }
+
+            if (updatedPet.experience > previousPet.experience) {
+                messages.push(`XP +${updatedPet.experience - previousPet.experience}`);
+                changes.experience = item.xpValue;
+            }
+
+            if (updatedPet.strength > previousPet.strength) {
+                messages.push(`STR +${updatedPet.strength - previousPet.strength}`);
+                changes.strength = item.strengthValue;
+            }
+
+            if (updatedPet.speed > previousPet.speed) {
+                messages.push(`SPD +${updatedPet.speed - previousPet.speed}`);
+                changes.speed = item.speedValue;
+            }
+
+            if (updatedPet.defense > previousPet.defense) {
+                messages.push(`DEF +${updatedPet.defense - previousPet.defense}`);
+                changes.defense = item.defenseValue;
+            }
+
+            addMessage(messages.join(" • "));
+
+            if (updatedPet.level > previousPet.level) {
+                addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
+            }
+
+            showStatChanges(changes);
+
+        } catch (err) {
+            console.error(err.response?.data?.message);
+        }
+    };
+
+    const handleEquipItem = async (inventoryItem) => {
+        try {
+            const res = await api.post("/api/inventory/equip", {
+                inventoryItemId: inventoryItem._id,
+            });
+
+            await fetchEquipment();
+
+            addMessage(res.data.message);
+            setActiveTab("equipment");
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to equip item.");
+        }
+    };
+
+    const handleUnequipItem = async (slot) => {
+        setActionError("");
+
+        try {
+            const res = await api.post("/api/inventory/unequip", { slot });
+
+            await fetchEquipment();
+            addMessage(res.data.message);
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to unequip item.");
+        }
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -231,121 +386,339 @@ export default function StudentPet() {
             {error && <div className="alert alert-danger">{error}</div>}
 
             {!loading && !error && pet && (
-                <div className="card shadow-sm p-4">
-                    <div className="row align-items-center">
-                        <div className="col-md-6 text-center mb-4 mb-md-0">
-                            <div
-                                className="border rounded bg-light d-flex align-items-center justify-content-center"
-                                style={{ minHeight: "360px" }}
-                            >
-                                <div className={`pet-container ${hopDirection} ${reaction}`}>
-                                    <img
-                                        src={petImages[pet.species]}
-                                        alt="Pet"
-                                        className="img-fluid pet-idle"
-                                        style={{ maxHeight: "300px" }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
+                <>
+                    <div className="row g-4 mb-4">
+                        {/* Pet Card */}
                         <div className="col-md-6">
-                        <h3 className="mb-2">{pet.name}</h3>
-                        <p className="text-muted mb-2">
-                            Species: {pet.species}
-                        </p>
-
-                        <p className="mb-1">
-                            <strong>Level:</strong> {pet.level}
-                        </p>
-                        <p className="mb-2">
-                            <strong>Experience:</strong> {pet.experience} / 100
-                        </p>
-                        
-                        <div className="mt-3">
-                            <h5 className="mb-2">Battle Stats</h5>
-
-                            <div className="d-flex gap-4">
-                                <div>
-                                    <span className="fw-semibold">STR:</span> {pet.strength}
-                                </div>
-
-                                <div>
-                                    <span className="fw-semibold">SPD:</span> {pet.speed}
-                                </div>
-
-                                <div>
-                                    <span className="fw-semibold">DEF:</span> {pet.defense}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label fw-semibold">Hunger</label>
-                            <div className="progress">
+                            <div className="card shadow-sm p-4 h-100">
                                 <div
-                                    className="progress-bar"
-                                    role="progressbar"
-                                    style={{ width: `${pet.hunger}%` }}
-                                    aria-valuenow={pet.hunger}
-                                    aria-valuemin="0"
-                                    aria-valuemax="100"
+                                    className="border rounded d-flex align-items-center justify-content-center h-100"
+                                    style={{ minHeight: "420px", ...petSceneStyle }}
                                 >
-                                    {pet.hunger}
+                                    <div className={`pet-container ${hopDirection} ${reaction}`}>
+                                        <img
+                                            src={petImages[pet.species]}
+                                            alt="Pet"
+                                            className="img-fluid pet-idle"
+                                            style={{ maxHeight: "340px" }}
+                                        />
+                                         {accessory && (
+                                            <span
+                                                className="badge text-bg-warning position-absolute"
+                                                style={{ top: "10px", right: "10px" }}
+                                            >
+                                                {accessory.name}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mb-3">
-                            <label className="form-label fw-semibold">Happiness</label>
-                            <div className="progress">
-                                <div
-                                    className="progress-bar"
-                                    role="progressbar"
-                                    style={{ width: `${pet.happiness}%` }}
-                                    aria-valuenow={pet.happiness}
-                                    aria-valuemin="0"
-                                    aria-valuemax="100"
-                                >
-                                    {pet.happiness}
+                        {/* Stats / Inventory Card */}
+                        <div className="col-md-6">
+                            <div className="card shadow-sm p-4 h-100">
+
+                                {/* Top Header Row */}
+                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h3 className="mb-1">{pet.name}</h3>
+                                        <p className="text-muted mb-1">Species: {pet.species}</p>
+
+                                        <p className="mb-1">
+                                            <strong>Level:</strong> {pet.level}
+                                        </p>
+                                    </div>
+
+                                    <div className="btn-group btn-group-sm">
+                                        <button
+                                            className={`btn ${
+                                                activeTab === "care"
+                                                    ? "btn-primary"
+                                                    : "btn-outline-primary"
+                                            }`}
+                                            onClick={() => setActiveTab("care")}
+                                        >
+                                            Care
+                                        </button>
+
+                                        <button
+                                            className={`btn ${
+                                                activeTab === "inventory"
+                                                    ? "btn-primary"
+                                                    : "btn-outline-primary"
+                                            }`}
+                                            onClick={() => setActiveTab("inventory")}
+                                        >
+                                            Inventory
+                                        </button>
+
+                                        <button
+                                            className={`btn ${activeTab === "equipment" ? "btn-primary" : "btn-outline-primary"}`}
+                                            onClick={() => setActiveTab("equipment")}
+                                        >
+                                            Equipment
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="mb-0">
-                            <label className="form-label fw-semibold">Cleanliness</label>
-                            <div className="progress">
-                                <div
-                                    className="progress-bar"
-                                    role="progressbar"
-                                    style={{ width: `${pet.cleanliness}%` }}
-                                    aria-valuenow={pet.cleanliness}
-                                    aria-valuemin="0"
-                                    aria-valuemax="100"
-                                >
-                                    {pet.cleanliness}
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold">
+                                        XP ({pet.experience} / 100)
+                                        {statChanges.experience && (
+                                            <span className="text-success ms-2">+{statChanges.experience}</span>
+                                        )}
+                                    </label>
+
+                                    <div className="progress">
+                                        <div
+                                            className="progress-bar bg-info"
+                                            role="progressbar"
+                                            style={{ width: `${pet.experience}%` }}
+                                            aria-valuenow={pet.experience}
+                                            aria-valuemin="0"
+                                            aria-valuemax="100"
+                                        >
+                                            {pet.experience}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* CARE TAB */}
+                                {activeTab === "care" && (
+                                    <>
+                                        <div className="mb-4">
+                                            <h5 className="mb-2">Battle Stats</h5>
+
+                                            <div className="d-flex gap-4 flex-wrap">
+                                                <div>
+                                                    <span className="fw-semibold">STR:</span> {pet.strength}
+                                                    {statChanges.strength && (
+                                                        <span className="text-success ms-2">+{statChanges.strength}</span>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <span className="fw-semibold">SPD:</span> {pet.speed}
+                                                    {statChanges.speed && (
+                                                        <span className="text-success ms-2">+{statChanges.speed}</span>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <span className="fw-semibold">DEF:</span> {pet.defense}
+                                                    {statChanges.defense && (
+                                                        <span className="text-success ms-2">+{statChanges.defense}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Hunger{" "}
+                                                {statChanges.hunger && (
+                                                    <span className="text-success ms-2">+{statChanges.hunger}</span>
+                                                )}
+                                            </label>
+                                            <div className="progress">
+                                                <div
+                                                    className="progress-bar"
+                                                    role="progressbar"
+                                                    style={{ width: `${pet.hunger}%` }}
+                                                >
+                                                    {pet.hunger}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Happiness{" "}
+                                                {statChanges.happiness && (
+                                                    <span className="text-success ms-2">+{statChanges.happiness}</span>
+                                                )}
+                                            </label>
+                                            <div className="progress">
+                                                <div
+                                                    className="progress-bar"
+                                                    role="progressbar"
+                                                    style={{ width: `${pet.happiness}%` }}
+                                                >
+                                                    {pet.happiness}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Cleanliness{" "}
+                                                {statChanges.cleanliness && (
+                                                    <span className="text-success ms-2">+{statChanges.cleanliness}</span>
+                                                )}
+                                            </label>
+                                            <div className="progress">
+                                                <div
+                                                    className="progress-bar"
+                                                    role="progressbar"
+                                                    style={{ width: `${pet.cleanliness}%` }}
+                                                >
+                                                    {pet.cleanliness}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {actionError && (
+                                            <div className="alert alert-danger mt-3">
+                                                {actionError}
+                                            </div>
+                                        )}
+
+                                        <div className="mt-3 d-flex gap-2 flex-wrap">
+                                            <button
+                                                className="btn btn-success"
+                                                onClick={handleFeed}
+                                                disabled={dailyStatus.feedUsed && currentPoints < 10}
+                                            >
+                                                {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
+                                            </button>
+
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={handlePlay}
+                                                disabled={dailyStatus.playUsed && currentPoints < 10}
+                                            >
+                                                {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
+                                            </button>
+
+                                            <button
+                                                className="btn btn-secondary"
+                                                onClick={handleBrush}
+                                                disabled={dailyStatus.brushUsed && currentPoints < 10}
+                                            >
+                                                {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* INVENTORY TAB */}
+                                {activeTab === "inventory" && (
+                                    <div>
+                                        <h5 className="mb-3">Inventory</h5>
+
+                                        {inventory.length === 0 ? (
+                                            <p className="mb-0">You do not own any items yet.</p>
+                                        ) : (
+                                            <div className="list-group">
+                                                {inventory.map((inv) => {
+                                                    const item = inv.shopItem;
+
+                                                    return (
+                                                        <div
+                                                            key={inv._id}
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                        >
+                                                            <div>
+                                                                <div className="fw-semibold">
+                                                                    {item?.name}
+                                                                </div>
+                                                                <small className="text-muted">
+                                                                    {item?.category} • {item?.itemType}
+                                                                </small>
+                                                            </div>
+
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                {item?.itemType === "consumable" && (
+                                                                    <span className="badge text-bg-secondary">
+                                                                        x{inv.quantity}
+                                                                    </span>
+                                                                )}
+
+                                                                {item?.itemType === "consumable" && (
+                                                                    <button
+                                                                        className="btn btn-sm btn-success"
+                                                                        onClick={() => handleUseItem(inv)}
+                                                                    >
+                                                                        Use
+                                                                    </button>
+                                                                )}
+
+                                                                {item?.itemType === "cosmetic" && (
+                                                                    isItemEquipped(inv) ? (
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-danger"
+                                                                            onClick={() => handleUnequipItem(item.equipSlot)}
+                                                                        >
+                                                                            Unequip
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-primary"
+                                                                            onClick={() => handleEquipItem(inv)}
+                                                                        >
+                                                                            Equip
+                                                                        </button>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* EQUIPMENT TAB */}
+                                {activeTab === "equipment" && (
+                                    <div>
+                                        <h5 className="mb-3">Equipment</h5>
+
+                                        <div className="list-group">
+                                            <div className="list-group-item d-flex justify-content-between">
+                                                <div>
+                                                    <div className="fw-semibold">Background</div>
+                                                    <small className="text-muted">
+                                                        {equipment.background?.shopItem?.name || "None"}
+                                                    </small>
+                                                </div>
+                                                {equipment.background && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleUnequipItem("background")}
+                                                    >
+                                                        Unequip
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="list-group-item d-flex justify-content-between">
+                                                <div>
+                                                    <div className="fw-semibold">Accessory</div>
+                                                    <small className="text-muted">
+                                                        {equipment.accessory?.shopItem?.name || "None"}
+                                                    </small>
+                                                </div>
+                                                {equipment.accessory && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleUnequipItem("accessory")}
+                                                    >
+                                                        Unequip
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-
-                        {actionError && <div className="alert alert-danger mt-4">{actionError}</div>}
-
-                        <div className="mt-3 d-flex gap-2 flex-wrap">
-                            <button className="btn btn-success" onClick={handleFeed} disabled={dailyStatus.feedUsed && currentPoints < 10}>
-                                {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
-                            </button>
-
-                            <button className="btn btn-primary" onClick={handlePlay} disabled={dailyStatus.playUsed && currentPoints < 10}>
-                                {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
-                            </button>
-
-                            <button className="btn btn-secondary" onClick={handleBrush} disabled={dailyStatus.brushUsed && currentPoints < 10}>
-                                {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
-                            </button>
-                        </div>
                         </div>
                     </div>
-                    <div className="mt-4">
+
+
+                    {/* Activity Log */}
+                    <div className="card shadow-sm p-4">
                         <h5 className="mb-2">Activity Log</h5>
 
                         <textarea
@@ -357,10 +730,10 @@ export default function StudentPet() {
                                     : messages.map((msg) => msg.text).join("\n")
                             }
                             readOnly
-                            rows={6}
+                            rows={5}
                         />
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
