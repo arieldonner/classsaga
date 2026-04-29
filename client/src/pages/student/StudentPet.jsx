@@ -68,6 +68,12 @@ export default function StudentPet() {
         }
     };
 
+    const isItemEquipped = (inventoryItem) => {
+        return Object.values(equipment).some(
+            (eq) => eq?.shopItem?._id === inventoryItem.shopItem?._id
+        );
+    };
+
     useEffect(() => {
         const fetchPet = async () => {
             try {
@@ -339,6 +345,19 @@ export default function StudentPet() {
         }
     };
 
+    const handleUnequipItem = async (slot) => {
+        setActionError("");
+
+        try {
+            const res = await api.post("/api/inventory/unequip", { slot });
+
+            await fetchEquipment();
+            addMessage(res.data.message);
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to unequip item.");
+        }
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -603,12 +622,21 @@ export default function StudentPet() {
                                                                 )}
 
                                                                 {item?.itemType === "cosmetic" && (
-                                                                    <button
-                                                                        className="btn btn-sm btn-outline-primary"
-                                                                        onClick={() => handleEquipItem(inv)}
-                                                                    >
-                                                                        Equip
-                                                                    </button>
+                                                                    isItemEquipped(inv) ? (
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-danger"
+                                                                            onClick={() => handleUnequipItem(item.equipSlot)}
+                                                                        >
+                                                                            Unequip
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-primary"
+                                                                            onClick={() => handleEquipItem(inv)}
+                                                                        >
+                                                                            Equip
+                                                                        </button>
+                                                                    )
                                                                 )}
                                                             </div>
                                                         </div>
@@ -632,6 +660,14 @@ export default function StudentPet() {
                                                         {equipment.background?.shopItem?.name || "None"}
                                                     </small>
                                                 </div>
+                                                {equipment.background && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleUnequipItem("background")}
+                                                    >
+                                                        Unequip
+                                                    </button>
+                                                )}
                                             </div>
 
                                             <div className="list-group-item d-flex justify-content-between">
@@ -641,6 +677,14 @@ export default function StudentPet() {
                                                         {equipment.accessory?.shopItem?.name || "None"}
                                                     </small>
                                                 </div>
+                                                {equipment.accessory && (
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleUnequipItem("accessory")}
+                                                    >
+                                                        Unequip
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

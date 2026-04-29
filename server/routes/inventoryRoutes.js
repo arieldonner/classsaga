@@ -223,4 +223,45 @@ router.get("/equipment", protect, async (req, res) => {
     }
 });
 
+// Unequip item from active pet slot
+router.post("/unequip", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can unequip items." });
+        }
+
+        const { slot } = req.body;
+
+        if (!slot || !["background", "accessory"].includes(slot)) {
+            return res.status(400).json({ message: "Valid equipment slot is required." });
+        }
+
+        const pet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        const removed = await PetEquipment.findOneAndDelete({
+            student: req.user._id,
+            pet: pet._id,
+            slot,
+        }).populate("shopItem");
+
+        if (!removed) {
+            return res.status(404).json({ message: "No item equipped in that slot." });
+        }
+
+        res.json({
+            message: `${removed.shopItem.name} unequipped.`,
+            slot,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to unequip item." });
+    }
+});
+
 module.exports = router;
