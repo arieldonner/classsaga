@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import "./StudentShop.css";
 
 export default function StudentShop() {
     const { user, updateUser } = useAuth();
@@ -90,6 +91,17 @@ export default function StudentShop() {
                             return (
                                 <div className="col-md-4" key={item._id}>
                                     <div className="card h-100 shadow-sm p-3">
+                                        <div className="shop-item-image mb-2">
+                                            {item.imageKey ? (
+                                                <img
+                                                    src={item.imageKey}
+                                                    alt={item.name}
+                                                    className="shop-item-img"
+                                                />
+                                            ) : (
+                                                item.name
+                                            )}
+                                        </div>
                                         <h5>{item.name}</h5>
                                         <p className="text-muted mb-2">{item.description}</p>
 

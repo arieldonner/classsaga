@@ -18,29 +18,56 @@ export default function Navbar() {
 
     return (
         <nav className="navbar navbar-light bg-light px-3">
-        <Link className="navbar-brand fw-bold" to={homeLink}>
-            EduSaga
-        </Link>
+            <div className="d-flex align-items-center gap-3">
+                <Link className="navbar-brand fw-bold mb-0" to={homeLink}>
+                    EduSaga
+                </Link>
 
-        {user && (
-            <div className="d-flex align-items-center">
-                {user.role === "student" && (
-                    <span className="me-3 fw-semibold">
-                        Points: {user.points ?? 0}
-                    </span>
-                )}  
-                <span className="me-3 fw-semibold">
-                    {user.name}
-                </span>
+                {user?.role === "student" && (
+                    <div className="d-flex gap-2">
+                        <Link className="nav-link" to="/student">
+                            Dashboard
+                        </Link>
 
-                <button
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={handleLogout}
-                >
-                    Logout
-                </button>
+                        <Link className="nav-link" to="/student/pet">
+                            Pet
+                        </Link>
+
+                        <Link className="nav-link" to="/student/shop">
+                            Shop
+                        </Link>
+                    </div>
+                )}
+
+                {user?.role === "teacher" && (
+                    <div className="d-flex gap-2">
+                        <Link className="nav-link" to="/teacher">
+                            Dashboard
+                        </Link>
+                    </div>
+                )}
             </div>
-        )}
+
+            {user && (
+                <div className="d-flex align-items-center">
+                    <span className="me-3 fw-semibold">
+                        {user.name}
+                    </span>
+
+                    {user.role === "student" && (
+                        <span className="me-3 text-muted">
+                            Points: {user.points ?? 0}
+                        </span>
+                    )}
+
+                    <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={handleLogout}
+                    >
+                        Logout
+                    </button>
+                </div>
+            )}
         </nav>
     );
 }
