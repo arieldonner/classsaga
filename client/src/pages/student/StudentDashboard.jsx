@@ -82,7 +82,7 @@ export default function StudentDashboard() {
                             <p className="mb-0">Loading pet...</p>
                         ) : pet ? (
                             <p className="mb-0">
-                                {pet.name} • Level {pet.level}
+                                {pet.name} • Level {pet.level} • XP {pet.experience}/100
                             </p>
                         ) : (
                             <p className="mb-0">No pet found.</p>
@@ -104,7 +104,7 @@ export default function StudentDashboard() {
                     <h4 className="mb-3">My Classrooms</h4>
 
                     {classrooms.length === 0 ? (
-                        <p className="mb-0">You have not joined any classrooms yet.</p>
+                        <p className="mb-0">You have not joined any classrooms yet. Join one to start earning points!</p>
                     ) : (
                         <div className="list-group">
                             {classrooms.map((classroom) => (
@@ -134,20 +134,20 @@ export default function StudentDashboard() {
                 {loadingTx ? (
                     <p>Loading activity...</p>
                 ) : transactions.length === 0 ? (
-                    <p className="mb-0">No recent activity.</p>
+                    <p className="mb-0">No recent activity yet. Complete actions or receive points to see updates here.</p>
                 ) : (
                     <div className="list-group">
                         {transactions.map((tx) => (
                             <div key={tx._id} className="list-group-item">
                             <div className="fw-semibold">
-                                +{tx.amount} points
+                                {tx.amount > 0 ? `+${tx.amount}` : tx.amount} points
                             </div>
 
                             <div className="text-muted">
                                 {tx.reason}
                             </div>
                             <small className="text-muted">
-                                {tx.classroom?.name} • {tx.teacher?.name}
+                                {tx.classroom?.name || "Pet/Shop"} • {tx.teacher?.name || "System" } • {" "} {new Date(tx.createdAt).toLocaleString(undefined, {month: "short", day: "numeric", hour: "numeric", minute: "2-digit",})}
                             </small>
                             </div>
                         ))}
