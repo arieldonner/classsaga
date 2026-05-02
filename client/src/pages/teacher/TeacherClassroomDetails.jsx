@@ -173,9 +173,17 @@ export default function TeacherClassroomDetails() {
         <div className="container py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
             <h2>Classroom Details</h2>
-            <Link to="/teacher" className="btn btn-outline-secondary">
-            Back to Dashboard
-            </Link>
+             <div className="d-flex gap-2">
+                <Link
+                    to={`/teacher/classrooms/${id}/students`}
+                    className="btn btn-outline-primary"
+                >
+                    Student Overview
+                </Link>
+                <Link to="/teacher" className="btn btn-outline-secondary">
+                Back to Dashboard
+                </Link>
+            </div>
         </div>
 
         {loading && <p>Loading classroom...</p>}
@@ -320,7 +328,7 @@ export default function TeacherClassroomDetails() {
                 </form>
             </div>
 
-            <div className="card shadow-sm p-4">
+            <div className="card shadow-sm p-4 mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                 <h4 className="mb-0">Class Roster</h4>
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const Classroom = require("../models/Classroom");
-const PointTransaction = require("../models/PointTransaction");
+const Pet = require("../models/Pet");
 const generateJoinCode = require("../utils/generateJoinCode");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -185,6 +185,56 @@ router.put("/:id", protect, async (req, res) => {
         res.json(classroom);
     } catch (err) {
         res.status(500).json({ message: "Failed to update classroom." });
+    }
+});
+
+router.get("/:id/students-overview", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can view student overview." });
+        }
+
+        const classroom = await Classroom.findById(req.params.id)
+            .populate({
+                path: "students",
+                select: "name username points",
+            });
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        // Get pets for these students
+        const studentIds = classroom.students.map((s) => s._id);
+
+        const pets = await Pet.find({
+            student: { $in: studentIds },
+        });
+
+        // Map pets to students
+        const studentData = classroom.students.map((student) => {
+            const pet = pets.find((p) => p.student.toString() === student._id.toString());
+
+            return {
+                _id: student._id,
+                name: student.name,
+                username: student.username,
+                points: student.points,
+                pet: pet
+                    ? {
+                            name: pet.name,
+                            level: pet.level,
+                            hunger: pet.hunger,
+                            happiness: pet.happiness,
+                            cleanliness: pet.cleanliness,
+                      }
+                    : null,
+            };
+        });
+
+        res.json(studentData);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch student overview." });
     }
 });
 
