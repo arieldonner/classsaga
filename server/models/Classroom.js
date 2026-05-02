@@ -28,6 +28,10 @@ const classroomSchema = new mongoose.Schema(
                 ref: "User",
             },
         ],
+        isArchived: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );

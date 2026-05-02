@@ -1,5 +1,6 @@
 const express = require("express");
 const Classroom = require("../models/Classroom");
+const PointTransaction = require("../models/PointTransaction");
 const generateJoinCode = require("../utils/generateJoinCode");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -47,7 +48,7 @@ router.get("/my-classrooms", protect, async (req, res) => {
             return res.status(403).json({ message: "Only teachers can view teacher classrooms." });
         }
 
-        const classrooms = await Classroom.find({ teacher: req.user._id }).sort({
+        const classrooms = await Classroom.find({ teacher: req.user._id, $or: [{ isArchived: false }, { isArchived: { $exists: false } }, ], }).sort({
             createdAt: -1,
         });
 
@@ -121,7 +122,7 @@ router.get("/student-classrooms", protect, async (req, res) => {
 router.get("/:id", protect, async (req, res) => {
     try {
         const classroom = await Classroom.findById(req.params.id)
-            .populate("students", "name username")
+            .populate("students", "name username points")
             .populate("teacher", "name");
 
         if (!classroom) {
@@ -136,6 +137,54 @@ router.get("/:id", protect, async (req, res) => {
         res.json(classroom);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch classroom." });
+    }
+});
+
+// Archive a classroom (teacher)
+router.patch("/:id/archive", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can archive classrooms." });
+        }
+
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        classroom.isArchived = true;
+        await classroom.save();
+
+        res.json({ message: "Classroom archived successfully." });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to archive classroom." });
+    }
+});
+
+// Edit classroom (teacher)
+router.put("/:id", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can edit classrooms." });
+        }
+
+        const { name, description } = req.body;
+
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        if (name) classroom.name = name;
+        if (description !== undefined) classroom.description = description;
+
+        await classroom.save();
+
+        res.json(classroom);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to update classroom." });
     }
 });
 

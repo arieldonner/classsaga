@@ -16,8 +16,15 @@ export default function TeacherClassroomDetails() {
     const [awardSuccess, setAwardSuccess] = useState("");
     const [awarding, setAwarding] = useState(false);
 
-    useEffect(() => {
-        const fetchClassroom = async () => {
+    const [editing, setEditing] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+    const [editError, setEditError] = useState("");
+
+    const [activity, setActivity] = useState([]);
+    const [loadingActivity, setLoadingActivity] = useState(true);
+
+    const fetchClassroom = async () => {
         try {
             const res = await api.get(`/api/classrooms/${id}`);
             setClassroom(res.data);
@@ -26,10 +33,70 @@ export default function TeacherClassroomDetails() {
         } finally {
             setLoading(false);
         }
-        };
+    };
 
+    const fetchActivity = async () => {
+        try {
+            const res = await api.get(`/api/points/classroom/${id}`);
+            setActivity(res.data);
+        } catch (err) {
+            console.error("Failed to load classroom activity");
+        } finally {
+            setLoadingActivity(false);
+        }
+    };
+
+    useEffect(() => {
         fetchClassroom();
     }, [id]);
+
+    useEffect(() => {
+        fetchActivity();
+    }, [id]);
+
+    const startEdit = () => {
+        setEditName(classroom.name);
+        setEditDescription(classroom.description || "");
+        setEditError("");
+        setEditing(true);
+    };
+
+    const handleUpdateClassroom = async (e) => {
+        e.preventDefault();
+        setEditError("");
+
+        if (!editName.trim()) {
+            setEditError("Classroom name is required.");
+            return;
+        }
+
+        try {
+            const res = await api.put(`/api/classrooms/${id}`, {
+                name: editName.trim(),
+                description: editDescription.trim(),
+            });
+
+            setClassroom(res.data);
+            setEditing(false);
+        } catch (err) {
+            setEditError(err.response?.data?.message || "Failed to update classroom.");
+        }
+    };
+
+    const handleArchiveClassroom = async () => {
+        const confirmed = window.confirm(
+            "Archive this classroom? It will no longer appear on your active dashboard."
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await api.patch(`/api/classrooms/${id}/archive`);
+            window.location.href = "/teacher";
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to archive classroom.");
+        }
+    };
 
     const handleStudentToggle = (studentId) => {
         setSelectedStudents((prev) =>
@@ -72,21 +139,24 @@ export default function TeacherClassroomDetails() {
         setAwarding(true);
 
         try {
-        await Promise.all(
-            selectedStudents.map((studentId) =>
-            api.post("/api/points/award", {
-                classroomId: id,
-                studentId,
-                amount: Number(amount),
-                reason: reason.trim(),
-            })
-            )
-        );
+        await api.post("/api/points/award-bulk", {
+            classroomId: id,
+            studentIds: selectedStudents,
+            amount: Number(amount),
+            reason: reason.trim(),
+        });
 
         setAwardSuccess("Points awarded successfully.");
         setAmount("");
         setReason("");
         setSelectedStudents([]);
+
+        try {
+            await fetchClassroom();
+            await fetchActivity();
+        } catch (refreshErr) {
+            console.error("Failed to refresh classroom data");
+        }
         } catch (err) {
         setAwardError(err.response?.data?.message || "Failed to award points.");
         } finally {
@@ -114,20 +184,86 @@ export default function TeacherClassroomDetails() {
         {!loading && !error && classroom && (
             <>
             <div className="card shadow-sm p-4 mb-4">
-                <h3 className="mb-2">{classroom.name}</h3>
+                <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 className="mb-2">{classroom.name}</h3>
 
-                {classroom.description && (
-                <p className="text-muted mb-3">{classroom.description}</p>
-                )}
+                        {classroom.description && (
+                            <p className="text-muted mb-3">{classroom.description}</p>
+                        )}
 
-                <p className="mb-1">
-                <strong>Join Code:</strong> {classroom.joinCode}
-                </p>
+                        <p className="mb-1">
+                            <strong>Join Code:</strong> {classroom.joinCode}
+                        </p>
 
-                {classroom.teacher && (
-                <p className="mb-0">
-                    <strong>Teacher:</strong> {classroom.teacher.name}
-                </p>
+                        {classroom.teacher && (
+                            <p className="mb-0">
+                                <strong>Teacher:</strong> {classroom.teacher.name}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="d-flex gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={startEdit}
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={handleArchiveClassroom}
+                        >
+                            Archive
+                        </button>
+                    </div>
+                </div>
+
+                {editing && (
+                    <form className="mt-4" onSubmit={handleUpdateClassroom}>
+                        <h5 className="mb-3">Edit Classroom</h5>
+
+                        {editError && (
+                            <div className="alert alert-danger">{editError}</div>
+                        )}
+
+                        <div className="mb-3">
+                            <label className="form-label">Classroom Name</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Description</label>
+                            <textarea
+                                className="form-control"
+                                value={editDescription}
+                                onChange={(e) => setEditDescription(e.target.value)}
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="d-flex gap-2">
+                            <button type="submit" className="btn btn-primary">
+                                Save Changes
+                            </button>
+
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                onClick={() => setEditing(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
                 )}
             </div>
 
@@ -212,11 +348,10 @@ export default function TeacherClassroomDetails() {
                     >
                         <div>
                         <div className="fw-semibold">{student.name}</div>
-                        {student.username && (
-                            <small className="text-muted">
-                            Username: {student.username}
-                            </small>
-                        )}
+                        <small className="text-muted">
+                            {student.username && `Username: ${student.username} • `}
+                            Points: {student.points ?? 0}
+                        </small>
                         </div>
 
                         <input
@@ -228,6 +363,41 @@ export default function TeacherClassroomDetails() {
                     </label>
                     ))}
                 </div>
+                )}
+            </div>
+
+            <div className="card shadow-sm p-4 mb-4">
+                <h4 className="mb-3">Recent Classroom Activity</h4>
+
+                {loadingActivity ? (
+                    <p>Loading activity...</p>
+                ) : activity.length === 0 ? (
+                    <p className="mb-0 text-muted">No classroom activity yet.</p>
+                ) : (
+                    <div className="list-group">
+                        {activity.map((tx) => (
+                            <div key={tx._id} className="border-bottom py-2">
+                                <div className="d-flex justify-content-between">
+                                    <span className="fw-semibold">
+                                        {tx.amount > 0 ? `+${tx.amount}` : tx.amount} pts • {tx.reason}
+                                    </span>
+
+                                    <small className="text-muted">
+                                        {new Date(tx.createdAt).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                        })}
+                                    </small>
+                                </div>
+
+                                <div className="small text-muted">
+                                    {tx.students?.map((student) => student?.name).join(", ")}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
             </>
