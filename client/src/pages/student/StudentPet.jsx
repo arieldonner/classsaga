@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useRef } from "react";
 import api from "../../api/api";
 import wolfyImage from "../../assets/pets/wolfy.png";
+import "./StudentPet.css";
 
 export default function StudentPet() {
     const [pet, setPet] = useState(null);
@@ -354,7 +355,6 @@ export default function StudentPet() {
             await fetchEquipment();
 
             addMessage(res.data.message);
-            setActiveTab("equipment");
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to equip item.");
         }
@@ -391,25 +391,78 @@ export default function StudentPet() {
                         {/* Pet Card */}
                         <div className="col-md-6">
                             <div className="card shadow-sm p-4 h-100">
-                                <div
-                                    className="border rounded d-flex align-items-center justify-content-center h-100"
-                                    style={{ minHeight: "420px", ...petSceneStyle }}
-                                >
-                                    <div className={`pet-container ${hopDirection} ${reaction}`}>
-                                        <img
-                                            src={petImages[pet.species]}
-                                            alt="Pet"
-                                            className="img-fluid pet-idle"
-                                            style={{ maxHeight: "340px" }}
-                                        />
-                                         {accessory && (
-                                            <span
-                                                className="badge text-bg-warning position-absolute"
-                                                style={{ top: "10px", right: "10px" }}
+                                <div className="pet-scene-wrapper position-relative">
+                                    {activeTab === "inventory" && (
+                                        <div className="equipment-slots">
+                                            <div
+                                                className={`equipment-slot ${equipment.background ? "filled" : ""}`}
+                                                onClick={() =>
+                                                    equipment.background && handleUnequipItem("background")
+                                                }
                                             >
-                                                {accessory.name}
-                                            </span>
-                                        )}
+                                                <div className="slot-icon">
+                                                    {equipment.background?.shopItem?.imageKey && (
+                                                        <img
+                                                            src={equipment.background.shopItem.imageKey}
+                                                            alt={equipment.background.shopItem.name}
+                                                            className="slot-img"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div className="slot-label">Background</div>
+
+                                                <div className="slot-value">
+                                                    {equipment.background?.shopItem?.name || "Empty"}
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                className={`equipment-slot ${equipment.accessory ? "filled" : ""}`}
+                                                onClick={() =>
+                                                    equipment.accessory && handleUnequipItem("accessory")
+                                                }
+                                            >
+                                                <div className="slot-icon">
+                                                    {equipment.accessory?.shopItem?.imageKey && (
+                                                        <img
+                                                            src={equipment.accessory.shopItem.imageKey}
+                                                            alt={equipment.accessory.shopItem.name}
+                                                            className="slot-img"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div className="slot-label">Accessory</div>
+
+                                                <div className="slot-value">
+                                                    {equipment.accessory?.shopItem?.name || "Empty"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div
+                                        className="border rounded d-flex align-items-center justify-content-center h-100"
+                                        style={{ minHeight: "420px", ...petSceneStyle }}
+                                    >
+                                        <div className={`pet-container ${hopDirection} ${reaction}`}>
+                                            <div className="pet-sprite pet-idle">
+                                                <img
+                                                    src={petImages[pet.species]}
+                                                    alt="Pet"
+                                                    className="img-fluid"
+                                                    style={{ maxHeight: "340px" }}
+                                                />
+
+                                                {accessory?.imageKey && (
+                                                    <img
+                                                        src={accessory.imageKey}
+                                                        alt={accessory.name}
+                                                        className="pet-accessory"
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -451,13 +504,6 @@ export default function StudentPet() {
                                             onClick={() => setActiveTab("inventory")}
                                         >
                                             Inventory
-                                        </button>
-
-                                        <button
-                                            className={`btn ${activeTab === "equipment" ? "btn-primary" : "btn-outline-primary"}`}
-                                            onClick={() => setActiveTab("equipment")}
-                                        >
-                                            Equipment
                                         </button>
                                     </div>
                                 </div>
@@ -610,51 +656,85 @@ export default function StudentPet() {
                                         {inventory.length === 0 ? (
                                             <p className="mb-0">You do not own any items yet.</p>
                                         ) : (
-                                            <div className="list-group">
+                                            <div className="inventory-grid">
                                                 {inventory.map((inv) => {
                                                     const item = inv.shopItem;
 
                                                     return (
-                                                        <div
-                                                            key={inv._id}
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                        >
-                                                            <div>
-                                                                <div className="fw-semibold">
-                                                                    {item?.name}
-                                                                </div>
-                                                                <small className="text-muted">
-                                                                    {item?.category} • {item?.itemType}
-                                                                </small>
+                                                        <div className="inventory-tile" key={inv._id}>
+                                                            <div className="tile-image">
+                                                                {item.imageKey ? (
+                                                                    <img
+                                                                        src={item.imageKey}
+                                                                        alt={item.name}
+                                                                        className="tile-img"
+                                                                    />
+                                                                ) : (
+                                                                    item.name
+                                                                )}
                                                             </div>
 
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                {item?.itemType === "consumable" && (
-                                                                    <span className="badge text-bg-secondary">
-                                                                        x{inv.quantity}
-                                                                    </span>
-                                                                )}
+                                                            {item.itemType === "consumable" && (
+                                                                <span className="tile-quantity">
+                                                                    x{inv.quantity}
+                                                                </span>
+                                                            )}
 
-                                                                {item?.itemType === "consumable" && (
+                                                            <div className="tile-name">
+                                                                {item.name}
+                                                            </div>
+
+                                                            <div className="tile-effect">
+                                                                {item.itemType === "consumable" ? (
+                                                                    <>
+                                                                        {item.effectType !== "none" && (
+                                                                            <div>
+                                                                                {item.effectType} +{item.effectValue}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {item.xpValue > 0 && (
+                                                                            <div>
+                                                                                XP +{item.xpValue}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {(item.strengthValue > 0 ||
+                                                                            item.speedValue > 0 ||
+                                                                            item.defenseValue > 0) && (
+                                                                            <div>
+                                                                                {item.strengthValue > 0 && `STR +${item.strengthValue} `}
+                                                                                {item.speedValue > 0 && `SPD +${item.speedValue} `}
+                                                                                {item.defenseValue > 0 && `DEF +${item.defenseValue}`}
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <div>{item.equipSlot}</div>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="tile-actions">
+                                                                {item.itemType === "consumable" && (
                                                                     <button
-                                                                        className="btn btn-sm btn-success"
+                                                                        className="btn btn-sm btn-success w-100"
                                                                         onClick={() => handleUseItem(inv)}
                                                                     >
                                                                         Use
                                                                     </button>
                                                                 )}
 
-                                                                {item?.itemType === "cosmetic" && (
+                                                                {item.itemType === "cosmetic" && (
                                                                     isItemEquipped(inv) ? (
                                                                         <button
-                                                                            className="btn btn-sm btn-outline-danger"
+                                                                            className="btn btn-sm btn-outline-danger w-100"
                                                                             onClick={() => handleUnequipItem(item.equipSlot)}
                                                                         >
                                                                             Unequip
                                                                         </button>
                                                                     ) : (
                                                                         <button
-                                                                            className="btn btn-sm btn-outline-primary"
+                                                                            className="btn btn-sm btn-outline-primary w-100"
                                                                             onClick={() => handleEquipItem(inv)}
                                                                         >
                                                                             Equip
@@ -667,49 +747,6 @@ export default function StudentPet() {
                                                 })}
                                             </div>
                                         )}
-                                    </div>
-                                )}
-
-                                {/* EQUIPMENT TAB */}
-                                {activeTab === "equipment" && (
-                                    <div>
-                                        <h5 className="mb-3">Equipment</h5>
-
-                                        <div className="list-group">
-                                            <div className="list-group-item d-flex justify-content-between">
-                                                <div>
-                                                    <div className="fw-semibold">Background</div>
-                                                    <small className="text-muted">
-                                                        {equipment.background?.shopItem?.name || "None"}
-                                                    </small>
-                                                </div>
-                                                {equipment.background && (
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => handleUnequipItem("background")}
-                                                    >
-                                                        Unequip
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="list-group-item d-flex justify-content-between">
-                                                <div>
-                                                    <div className="fw-semibold">Accessory</div>
-                                                    <small className="text-muted">
-                                                        {equipment.accessory?.shopItem?.name || "None"}
-                                                    </small>
-                                                </div>
-                                                {equipment.accessory && (
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => handleUnequipItem("accessory")}
-                                                    >
-                                                        Unequip
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
                             </div>

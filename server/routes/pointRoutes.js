@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Classroom = require("../models/Classroom");
 const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
+const crypto = require("crypto");
 
 const router = express.Router();
 
@@ -87,6 +88,120 @@ router.get("/my-transactions", protect, async (req, res) => {
         res.json(transactions);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch transactions." });
+    }
+});
+
+// Teacher views recent point activity for one classroom
+router.get("/classroom/:classroomId", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can view classroom activity." });
+        }
+
+        const { classroomId } = req.params;
+
+        const classroom = await Classroom.findById(classroomId);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        const transactions = await PointTransaction.find({
+            classroom: classroomId,
+        })
+            .populate("student", "name username")
+            .populate("teacher", "name")
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        const groupedMap = new Map();
+
+        transactions.forEach((tx) => {
+            const key = tx.batchId || tx._id.toString();
+
+            if (!groupedMap.has(key)) {
+                groupedMap.set(key, {
+                    _id: key,
+                    batchId: tx.batchId,
+                    amount: tx.amount,
+                    reason: tx.reason,
+                    teacher: tx.teacher,
+                    students: [],
+                    createdAt: tx.createdAt,
+                });
+            }
+
+            groupedMap.get(key).students.push(tx.student);
+        });
+
+        const groupedActivity = Array.from(groupedMap.values()).slice(0, 10);
+
+        res.json(groupedActivity);
+        // const transactions = await PointTransaction.find({
+        //     classroom: classroomId,
+        // })
+        //     .populate("student", "name username")
+        //     .populate("teacher", "name")
+        //     .sort({ createdAt: -1 })
+        //     .limit(10);
+
+        // res.json(transactions);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch classroom activity." });
+    }
+});
+
+router.post("/award-bulk", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can award points." });
+        }
+
+        const { classroomId, studentIds, amount, reason } = req.body;
+
+        if (!classroomId || !studentIds?.length || !amount || !reason?.trim()) {
+            return res.status(400).json({ message: "Missing required fields." });
+        }
+
+        const classroom = await Classroom.findById(classroomId);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        const batchId = crypto.randomUUID();
+
+        const validStudentIds = studentIds.filter((studentId) =>
+            classroom.students.some((id) => id.toString() === studentId)
+        );
+
+        if (validStudentIds.length === 0) {
+            return res.status(400).json({ message: "No valid students selected." });
+        }
+
+        await User.updateMany(
+            { _id: { $in: validStudentIds } },
+            { $inc: { points: Number(amount) } }
+        );
+
+        const transactions = validStudentIds.map((studentId) => ({
+            student: studentId,
+            teacher: req.user._id,
+            classroom: classroomId,
+            amount: Number(amount),
+            reason: reason.trim(),
+            type: "award",
+            batchId,
+        }));
+
+        await PointTransaction.insertMany(transactions);
+
+        res.status(201).json({
+            message: "Points awarded successfully.",
+            batchId,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to award points." });
     }
 });
 

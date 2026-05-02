@@ -1,5 +1,6 @@
 const express = require("express");
 const Classroom = require("../models/Classroom");
+const Pet = require("../models/Pet");
 const generateJoinCode = require("../utils/generateJoinCode");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -47,7 +48,7 @@ router.get("/my-classrooms", protect, async (req, res) => {
             return res.status(403).json({ message: "Only teachers can view teacher classrooms." });
         }
 
-        const classrooms = await Classroom.find({ teacher: req.user._id }).sort({
+        const classrooms = await Classroom.find({ teacher: req.user._id, $or: [{ isArchived: false }, { isArchived: { $exists: false } }, ], }).sort({
             createdAt: -1,
         });
 
@@ -121,7 +122,7 @@ router.get("/student-classrooms", protect, async (req, res) => {
 router.get("/:id", protect, async (req, res) => {
     try {
         const classroom = await Classroom.findById(req.params.id)
-            .populate("students", "name username")
+            .populate("students", "name username points")
             .populate("teacher", "name");
 
         if (!classroom) {
@@ -136,6 +137,104 @@ router.get("/:id", protect, async (req, res) => {
         res.json(classroom);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch classroom." });
+    }
+});
+
+// Archive a classroom (teacher)
+router.patch("/:id/archive", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can archive classrooms." });
+        }
+
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        classroom.isArchived = true;
+        await classroom.save();
+
+        res.json({ message: "Classroom archived successfully." });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to archive classroom." });
+    }
+});
+
+// Edit classroom (teacher)
+router.put("/:id", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can edit classrooms." });
+        }
+
+        const { name, description } = req.body;
+
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        if (name) classroom.name = name;
+        if (description !== undefined) classroom.description = description;
+
+        await classroom.save();
+
+        res.json(classroom);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to update classroom." });
+    }
+});
+
+router.get("/:id/students-overview", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can view student overview." });
+        }
+
+        const classroom = await Classroom.findById(req.params.id)
+            .populate({
+                path: "students",
+                select: "name username points",
+            });
+
+        if (!classroom || classroom.teacher.toString() !== req.user._id.toString()) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        // Get pets for these students
+        const studentIds = classroom.students.map((s) => s._id);
+
+        const pets = await Pet.find({
+            student: { $in: studentIds },
+        });
+
+        // Map pets to students
+        const studentData = classroom.students.map((student) => {
+            const pet = pets.find((p) => p.student.toString() === student._id.toString());
+
+            return {
+                _id: student._id,
+                name: student.name,
+                username: student.username,
+                points: student.points,
+                pet: pet
+                    ? {
+                            name: pet.name,
+                            level: pet.level,
+                            hunger: pet.hunger,
+                            happiness: pet.happiness,
+                            cleanliness: pet.cleanliness,
+                      }
+                    : null,
+            };
+        });
+
+        res.json(studentData);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch student overview." });
     }
 });
 

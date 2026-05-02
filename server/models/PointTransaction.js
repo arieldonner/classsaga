@@ -31,6 +31,10 @@ const pointTransactionSchema = new mongoose.Schema(
             enum: ["award", "spend"],
             default: "award",
         },
+        batchId: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import "./StudentShop.css";
 
 export default function StudentShop() {
     const { user, updateUser } = useAuth();
@@ -89,46 +90,61 @@ export default function StudentShop() {
 
                             return (
                                 <div className="col-md-4" key={item._id}>
-                                    <div className="card h-100 shadow-sm p-3">
-                                        <h5>{item.name}</h5>
-                                        <p className="text-muted mb-2">{item.description}</p>
+                                    <div className="shop-tile">
+                                        <div className="shop-tile-image">
+                                            {item.imageKey ? (
+                                                <img
+                                                    src={item.imageKey}
+                                                    alt={item.name}
+                                                    className="shop-tile-img"
+                                                />
+                                            ) : (
+                                                item.name
+                                            )}
+                                        </div>
+                                        <h5 className="shop-tile-name">{item.name}</h5>
+                                        <p className="shop-tile-description">{item.description}</p>
 
-                                        <p className="mb-1">
-                                            <strong>Category:</strong> {item.category}
-                                        </p>
+                                        <div className="shop-tile-info">
+                                            <div>
+                                                <strong>Category:</strong> {item.category}
+                                            </div>
 
-                                        <p className="mb-1">
-                                            <strong>Cost:</strong> {item.cost} pts
-                                        </p>
+                                            <div>
+                                                <strong>Cost:</strong> {item.cost} pts
+                                            </div>
 
-                                        {ownedQuantity > 0 && (
-                                            <p className="mb-1">
-                                                <strong>Owned:</strong>{" "}
-                                                {item.itemType === "cosmetic" ? "Yes" : ownedQuantity}
-                                            </p>
-                                        )}
+                                            {ownedQuantity > 0 && (
+                                                <div>
+                                                    <strong>Owned:</strong>{" "}
+                                                    {item.itemType === "cosmetic" ? "Yes" : ownedQuantity}
+                                                </div>
+                                            )}
 
-                                        {item.itemType === "consumable" && (
-                                            <p className="mb-1">
-                                                <strong>Effect:</strong> {item.effectType} +{item.effectValue}
-                                            </p>
-                                        )}
+                                            {item.itemType === "consumable" && (
+                                                <div>
+                                                    <strong>Effect:</strong> {item.effectType} +{item.effectValue}
+                                                </div>
+                                            )}
 
-                                        <p className="mb-3">
-                                            <strong>Unlock Level:</strong> {item.unlockLevel}
-                                        </p>
+                                            <div>
+                                                <strong>Unlock:</strong> Level {item.unlockLevel}
+                                            </div>
+                                        </div>
 
-                                        <button
-                                            className="btn btn-primary mt-auto"
-                                            onClick={() => handleBuy(item._id)}
-                                            disabled={cannotAfford || alreadyOwnsCosmetic}
-                                        >
-                                            {alreadyOwnsCosmetic
-                                                ? "Purchased"
-                                                : cannotAfford
-                                                ? "Not Enough Points"
-                                                : "Buy"}
-                                        </button>
+                                        <div className="shop-tile-actions">
+                                            <button
+                                                className="btn btn-primary mt-auto w-100"
+                                                onClick={() => handleBuy(item._id)}
+                                                disabled={cannotAfford || alreadyOwnsCosmetic}
+                                            >
+                                                {alreadyOwnsCosmetic
+                                                    ? "Purchased"
+                                                    : cannotAfford
+                                                    ? "Not Enough Points"
+                                                    : "Buy"}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
