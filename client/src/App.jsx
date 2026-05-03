@@ -12,6 +12,7 @@ import TeacherClassroomDetails from "./pages/teacher/TeacherClassroomDetails";
 import StudentPet from "./pages/student/StudentPet";
 import StudentShop from "./pages/student/StudentShop";
 import TeacherStudentOverview from "./pages/teacher/TeacherStudentOverview";
+import ChooseStarterPet from "./pages/student/ChooseStarterPet";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/student/classrooms/join" element={<ProtectedRoute role="student"><JoinClassroom /></ProtectedRoute>}/>
         <Route path="/teacher/classrooms/:id" element={<ProtectedRoute role="teacher"><TeacherClassroomDetails /></ProtectedRoute>}/>
         <Route path="/teacher/classrooms/:id/students" element={<TeacherStudentOverview />}/>
+        <Route path="/student/choose-starter" element={<ProtectedRoute role="student"><ChooseStarterPet /></ProtectedRoute>}/>
         <Route path="/student/pet" element={<ProtectedRoute role="student"><StudentPet /></ProtectedRoute>}/>
         <Route path="/student/shop" element={<ProtectedRoute role="student"><StudentShop /></ProtectedRoute>}/>
         <Route path="/" element={<Navigate to="/login" replace />} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
 export default function StudentDashboard() {
@@ -12,6 +13,8 @@ export default function StudentDashboard() {
 
     const [pet, setPet] = useState(null);
     const [loadingPet, setLoadingPet] = useState(true);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchClassrooms = async () => {
@@ -49,7 +52,11 @@ export default function StudentDashboard() {
                 const res = await api.get("/api/pets/my-pet");
                 setPet(res.data);
             } catch (err) {
-                console.error("Failed to load pet");
+                if (err.response?.status === 404) {
+                    navigate("/student/choose-starter");
+                } else {
+                    console.error("Failed to load pet");
+                }
             } finally {
                 setLoadingPet(false);
             }

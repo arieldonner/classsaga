@@ -5,6 +5,7 @@ const User = require("../models/User");
 const DailyCareLog = require("../models/DailyCareLog");
 const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
+const PET_TYPES = require("../config/petTypes");
 
 const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
@@ -327,6 +328,58 @@ router.get("/daily-status", protect, async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch daily status." });
+    }
+});
+
+// Get starter pets
+router.get("/starter-options", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can choose a starter pet." });
+        }
+
+        const starterPets = Object.values(PET_TYPES).filter((pet) => pet.isStarter);
+
+        res.json(starterPets);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch starter pets." });
+    }
+});
+
+// Choose starter pet
+router.post("/choose-starter", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can choose a starter pet." });
+        }
+
+        const { species } = req.body;
+
+        const petType = PET_TYPES[species];
+
+        if (!petType || !petType.isStarter) {
+            return res.status(400).json({ message: "Invalid starter pet." });
+        }
+
+        const existingPet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
+
+        if (existingPet) {
+            return res.status(400).json({ message: "You already have a starter pet." });
+        }
+
+        const pet = await Pet.create({
+            student: req.user._id,
+            name: petType.name,
+            species: petType.species,
+            isActive: true,
+        });
+
+        res.status(201).json(pet);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to choose starter pet." });
     }
 });
 

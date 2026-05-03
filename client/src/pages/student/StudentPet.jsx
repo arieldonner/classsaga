@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
+
 import wolfyImage from "../../assets/pets/wolfy.png";
+import penguImage from "../../assets/pets/Pengu.png";
+import snazakeImage from "../../assets/pets/Snazake.png";
+
 import "./StudentPet.css";
 
 export default function StudentPet() {
@@ -21,8 +26,12 @@ export default function StudentPet() {
     const [inventory, setInventory] = useState([]);
     const [statChanges, setStatChanges] = useState({});
 
+    const navigate = useNavigate();
+
     const petImages = {
         wolfy: wolfyImage,
+        pengu: penguImage,
+        snazake: snazakeImage,
     };
 
     const [dailyStatus, setDailyStatus] = useState({
@@ -96,7 +105,11 @@ export default function StudentPet() {
                 const res = await api.get("/api/pets/my-pet");
                 setPet(res.data);
             } catch (err) {
-                setError(err.response?.data?.message || "Failed to load pet.");
+                if (err.response?.status === 404) {
+                    navigate("/student/choose-starter");
+                } else {
+                    setError(err.response?.data?.message || "Failed to load pet.");
+                }
             } finally {
                 setLoading(false);
             }
