@@ -5,9 +5,9 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
-import wolfyImage from "../../assets/pets/wolfy.png";
-import penguImage from "../../assets/pets/Pengu.png";
-import snazakeImage from "../../assets/pets/Snazake.png";
+// import wolfyImage from "../../assets/pets/wolfy.png";
+// import penguImage from "../../assets/pets/Pengu.png";
+// import snazakeImage from "../../assets/pets/Snazake.png";
 
 import "./StudentPet.css";
 
@@ -28,11 +28,11 @@ export default function StudentPet() {
 
     const navigate = useNavigate();
 
-    const petImages = {
-        wolfy: wolfyImage,
-        pengu: penguImage,
-        snazake: snazakeImage,
-    };
+    // const petImages = {
+    //     wolfy: wolfyImage,
+    //     pengu: penguImage,
+    //     snazake: snazakeImage,
+    // };
 
     const [dailyStatus, setDailyStatus] = useState({
         feedUsed: false,
@@ -461,7 +461,7 @@ export default function StudentPet() {
                                         <div className={`pet-container ${hopDirection} ${reaction}`}>
                                             <div className="pet-sprite pet-idle">
                                                 <img
-                                                    src={petImages[pet.species]}
+                                                    src={`/assets/pets/${pet.species}.png`}
                                                     alt="Pet"
                                                     className="img-fluid"
                                                     style={{ maxHeight: "340px" }}

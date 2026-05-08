@@ -13,6 +13,7 @@ export default function StudentShop() {
     const [message, setMessage] = useState("");
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const [inventory, setInventory] = useState([]);
+    const [ownedPets, setOwnedPets] = useState([]);
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -30,7 +31,20 @@ export default function StudentShop() {
         };
 
         fetchShopData();
-    }, []);
+            }, []);
+
+            useEffect(() => {
+            const fetchPets = async () => {
+                try {
+                    const res = await api.get("/api/pets/my-pets");
+                    setOwnedPets(res.data);
+                } catch (err) {
+                    console.error("Failed to load pets");
+                }
+            };
+
+            fetchPets();
+        }, []);
 
     const getInventoryForItem = (itemId) => {
         return inventory.find((inv) => inv.shopItem?._id === itemId);
@@ -86,6 +100,11 @@ export default function StudentShop() {
                             const ownedQuantity = ownedItem?.quantity || 0;
                             const alreadyOwnsCosmetic =
                                 item.itemType === "cosmetic" && ownedQuantity > 0;
+                            const alreadyOwnsPet =
+                                item.itemType === "pet" &&
+                                ownedPets.some((p) => p.species === item.petSpecies);
+                            const alreadyOwned =
+                                alreadyOwnsCosmetic || alreadyOwnsPet;
                             const cannotAfford = currentPoints < item.cost;
 
                             return (
@@ -136,12 +155,14 @@ export default function StudentShop() {
                                             <button
                                                 className="btn btn-primary mt-auto w-100"
                                                 onClick={() => handleBuy(item._id)}
-                                                disabled={cannotAfford || alreadyOwnsCosmetic}
+                                                disabled={cannotAfford || alreadyOwned}
                                             >
-                                                {alreadyOwnsCosmetic
-                                                    ? "Purchased"
+                                                {alreadyOwned
+                                                    ? "Owned"
                                                     : cannotAfford
                                                     ? "Not Enough Points"
+                                                    : item.itemType === "pet" 
+                                                    ? "Adopt"
                                                     : "Buy"}
                                             </button>
                                         </div>

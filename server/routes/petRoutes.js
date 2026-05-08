@@ -55,7 +55,10 @@ router.get("/my-pet", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students have pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -70,6 +73,23 @@ router.get("/my-pet", protect, async (req, res) => {
         res.json(pet);
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch pet." });
+    }
+});
+
+// Get all current student's pets
+router.get("/my-pets", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students have pets." });
+        }
+
+        const pets = await Pet.find({
+            student: req.user._id,
+        }).sort({ createdAt: 1 });
+
+        res.json(pets);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch pets." });
     }
 });
 
