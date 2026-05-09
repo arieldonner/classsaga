@@ -100,7 +100,7 @@ router.post("/feed", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can feed pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -175,7 +175,7 @@ router.post("/play", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can play with pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -250,7 +250,7 @@ router.post("/brush", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can brush pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -400,6 +400,39 @@ router.post("/choose-starter", protect, async (req, res) => {
         res.status(201).json(pet);
     } catch (err) {
         res.status(500).json({ message: "Failed to choose starter pet." });
+    }
+});
+
+// Switch active pet
+router.patch("/:petId/activate", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can switch pets." });
+        }
+
+        const pet = await Pet.findOne({
+            _id: req.params.petId,
+            student: req.user._id,
+        });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        await Pet.updateMany(
+            { student: req.user._id },
+            { isActive: false }
+        );
+
+        pet.isActive = true;
+        await pet.save();
+
+        res.json({
+            message: `${pet.name} is now active.`,
+            pet,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to switch pet." });
     }
 });
 

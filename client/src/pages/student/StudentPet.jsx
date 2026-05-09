@@ -25,14 +25,9 @@ export default function StudentPet() {
     const [activeTab, setActiveTab] = useState("care");
     const [inventory, setInventory] = useState([]);
     const [statChanges, setStatChanges] = useState({});
+    const [ownedPets, setOwnedPets] = useState([]);
 
     const navigate = useNavigate();
-
-    // const petImages = {
-    //     wolfy: wolfyImage,
-    //     pengu: penguImage,
-    //     snazake: snazakeImage,
-    // };
 
     const [dailyStatus, setDailyStatus] = useState({
         feedUsed: false,
@@ -60,10 +55,19 @@ export default function StudentPet() {
 
     const accessory = equipment.accessory?.shopItem;
 
+    const formatLogTime = () => {
+        return new Date().toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+        });
+    };
+
     const addMessage = (text) => {
         setMessages((prev) => [
             ...prev.slice(-19),
-            { id: Date.now(), text },
+            { id: Date.now(), text: `[${formatLogTime()}] ${text}`, }, 
         ]);
     };
 
@@ -73,6 +77,15 @@ export default function StudentPet() {
             setInventory(res.data);
         } catch (err) {
             console.error("Failed to load inventory");
+        }
+    };
+
+    const fetchOwnedPets = async () => {
+        try {
+            const res = await api.get("/api/pets/my-pets");
+            setOwnedPets(res.data);
+        } catch (err) {
+            console.error("Failed to load pets");
         }
     };
 
@@ -117,6 +130,7 @@ export default function StudentPet() {
 
         fetchPet();
         fetchInventory();
+        fetchOwnedPets();
         fetchEquipment();
     }, []);
 
@@ -185,15 +199,15 @@ export default function StudentPet() {
 
             const actionMessage =
                 res.data.actionType === "free"
-                    ? `Fed pet (Free) • Hunger +${hungerIncrease}`
-                    : `Fed pet (-10 pts) • Hunger +${hungerIncrease}`;
+                    ? `Fed ${res.data.pet.name} (Free) • Hunger +${hungerIncrease}`
+                    : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
             addMessage(actionMessage);
 
             if (res.data.pet.level > previousLevel) {
-                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
+                addMessage(`Level Up! ${res.data.pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
-                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
+                    `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
             setReaction("react-feed");
@@ -226,8 +240,8 @@ export default function StudentPet() {
 
             const actionMessage =
                 res.data.actionType === "free"
-                    ? `Played with pet (Free) • Happiness +${happinessIncrease}`
-                    : `Played with pet (-10 pts) • Happiness +${happinessIncrease}`;
+                    ? `Played with ${res.data.pet.name} (Free) • Happiness +${happinessIncrease}`
+                    : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
             addMessage(actionMessage);
 
@@ -268,8 +282,8 @@ export default function StudentPet() {
 
             const actionMessage =
                 res.data.actionType === "free"
-                    ? `Brushed pet (Free) • Cleanliness +${cleanlinessIncrease}`
-                    : `Brushed pet (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
+                    ? `Brushed ${res.data.pet.name} (Free) • Cleanliness +${cleanlinessIncrease}`
+                    : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
             addMessage(actionMessage);
 
@@ -307,7 +321,7 @@ export default function StudentPet() {
 
             const item = inventoryItem.shopItem;
 
-            const messages = [`Used ${item.name}`];
+            const messages = [`Used ${item.name} on ${updatedPet.name}`];
 
             const changes = {};
 
@@ -383,6 +397,21 @@ export default function StudentPet() {
             addMessage(res.data.message);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to unequip item.");
+        }
+    };
+
+    const handleSwitchPet = async (petId) => {
+        try {
+            const res = await api.patch(`/api/pets/${petId}/activate`);
+
+            setPet(res.data.pet);
+            await fetchOwnedPets();
+            await fetchEquipment();
+
+            addMessage(res.data.message);
+            setActiveTab("care");
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to switch pet.");
         }
     };
 
@@ -517,6 +546,17 @@ export default function StudentPet() {
                                             onClick={() => setActiveTab("inventory")}
                                         >
                                             Inventory
+                                        </button>
+
+                                        <button
+                                            className={`btn ${
+                                                activeTab === "pets"
+                                                    ? "btn-primary"
+                                                    : "btn-outline-primary"
+                                            }`}
+                                            onClick={() => setActiveTab("pets")}
+                                        >
+                                            Pets
                                         </button>
                                     </div>
                                 </div>
@@ -758,6 +798,56 @@ export default function StudentPet() {
                                                         </div>
                                                     );
                                                 })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {activeTab === "pets" && (
+                                    <div>
+                                        <h5 className="mb-3">My Pets</h5>
+
+                                        {ownedPets.length === 0 ? (
+                                            <p className="mb-0">You do not own any pets yet.</p>
+                                        ) : (
+                                            <div className="inventory-grid">
+                                                {ownedPets.map((ownedPet) => (
+                                                    <div className="inventory-tile" key={ownedPet._id}>
+                                                        <div className="tile-image">
+                                                            <img
+                                                                src={`/assets/pets/${ownedPet.species}.png`}
+                                                                alt={ownedPet.name}
+                                                                className="tile-img"
+                                                            />
+                                                        </div>
+
+                                                        <div className="tile-name">
+                                                            {ownedPet.name}
+                                                        </div>
+
+                                                        <div className="tile-effect">
+                                                            <div>Level {ownedPet.level}</div>
+                                                        </div>
+
+                                                        <div className="tile-actions">
+                                                            {ownedPet.isActive ? (
+                                                                <button
+                                                                    className="btn btn-sm btn-secondary w-100"
+                                                                    disabled
+                                                                >
+                                                                    Active
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-primary w-100"
+                                                                    onClick={() => handleSwitchPet(ownedPet._id)}
+                                                                >
+                                                                    Switch
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                     </div>
