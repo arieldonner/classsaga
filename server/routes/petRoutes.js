@@ -5,6 +5,7 @@ const User = require("../models/User");
 const DailyCareLog = require("../models/DailyCareLog");
 const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
+const PET_TYPES = require("../config/petTypes");
 
 const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
@@ -54,7 +55,10 @@ router.get("/my-pet", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students have pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -72,6 +76,23 @@ router.get("/my-pet", protect, async (req, res) => {
     }
 });
 
+// Get all current student's pets
+router.get("/my-pets", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students have pets." });
+        }
+
+        const pets = await Pet.find({
+            student: req.user._id,
+        }).sort({ createdAt: 1 });
+
+        res.json(pets);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch pets." });
+    }
+});
+
 // Feed pet
 router.post("/feed", protect, async (req, res) => {
     try {
@@ -79,7 +100,7 @@ router.post("/feed", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can feed pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -154,7 +175,7 @@ router.post("/play", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can play with pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -229,7 +250,7 @@ router.post("/brush", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can brush pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id });
+        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
@@ -327,6 +348,91 @@ router.get("/daily-status", protect, async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch daily status." });
+    }
+});
+
+// Get starter pets
+router.get("/starter-options", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can choose a starter pet." });
+        }
+
+        const starterPets = Object.values(PET_TYPES).filter((pet) => pet.isStarter);
+
+        res.json(starterPets);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch starter pets." });
+    }
+});
+
+// Choose starter pet
+router.post("/choose-starter", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can choose a starter pet." });
+        }
+
+        const { species } = req.body;
+
+        const petType = PET_TYPES[species];
+
+        if (!petType || !petType.isStarter) {
+            return res.status(400).json({ message: "Invalid starter pet." });
+        }
+
+        const existingPet = await Pet.findOne({
+            student: req.user._id,
+            isActive: true,
+        });
+
+        if (existingPet) {
+            return res.status(400).json({ message: "You already have a starter pet." });
+        }
+
+        const pet = await Pet.create({
+            student: req.user._id,
+            name: petType.name,
+            species: petType.species,
+            isActive: true,
+        });
+
+        res.status(201).json(pet);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to choose starter pet." });
+    }
+});
+
+// Switch active pet
+router.patch("/:petId/activate", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can switch pets." });
+        }
+
+        const pet = await Pet.findOne({
+            _id: req.params.petId,
+            student: req.user._id,
+        });
+
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+
+        await Pet.updateMany(
+            { student: req.user._id },
+            { isActive: false }
+        );
+
+        pet.isActive = true;
+        await pet.save();
+
+        res.json({
+            message: `${pet.name} is now active.`,
+            pet,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to switch pet." });
     }
 });
 

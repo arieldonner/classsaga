@@ -14,12 +14,12 @@ const shopItemSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: ["food", "toy", "care", "background", "accessory"],
+            enum: ["food", "toy", "care", "background", "accessory", "pet"],
             required: true,
         },
         itemType: {
             type: String,
-            enum: ["consumable", "cosmetic"],
+            enum: ["consumable", "cosmetic", "pet"],
             required: true,
         },
         equipSlot: {
@@ -56,6 +56,11 @@ const shopItemSchema = new mongoose.Schema(
         defenseValue: {
             type: Number,
             default: 0,
+        },
+        petSpecies: {
+            type: String,
+            enum: ["wolfy", "pengu", "snazake", "none"],
+            default: "none",
         },
         unlockLevel: {
             type: Number,

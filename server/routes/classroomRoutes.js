@@ -209,6 +209,7 @@ router.get("/:id/students-overview", protect, async (req, res) => {
 
         const pets = await Pet.find({
             student: { $in: studentIds },
+            isActive: true,
         });
 
         // Map pets to students

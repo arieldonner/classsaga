@@ -11,14 +11,13 @@ const petSchema = new mongoose.Schema(
         species: {
             type: String,
             required: true,
-            enum: ["wolfy"],
-            default: "wolfy",
+            enum: ["wolfy", "pengu", "snazake"],
             trim: true,
         },
 
         name: {
             type: String,
-            default: "My Pet",
+            required: true,
             trim: true,
         },
 

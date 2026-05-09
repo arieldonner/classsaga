@@ -6,6 +6,7 @@ const InventoryItem = require("../models/InventoryItem");
 const Pet = require("../models/Pet");
 const PointTransaction = require("../models/PointTransaction");
 const User = require("../models/User");
+const PET_TYPES = require("../config/petTypes");
 const { protect } = require("../middleware/authMiddleware");
 
 // Get available shop items
@@ -69,6 +70,46 @@ router.post("/buy", protect, async (req, res) => {
             return res.status(400).json({ message: "Not enough points." });
         }
 
+        if (item.itemType === "pet") {
+            const existingPet = await Pet.findOne({
+                student: student._id,
+                species: item.petSpecies,
+            });
+
+            if (existingPet) {
+                return res.status(400).json({ message: "You already own this pet." });
+            }
+
+            const petType = PET_TYPES[item.petSpecies];
+
+            if (!petType) {
+                return res.status(400).json({ message: "Invalid pet type." });
+            }
+
+            const newPet = await Pet.create({
+                student: student._id,
+                name: petType.name,
+                species: petType.species,
+                isActive: false,
+            });
+
+            await PointTransaction.create({
+                student: student._id,
+                amount: -item.cost,
+                reason: `Purchased pet: ${item.name}`,
+                type: "spend",
+            });
+
+            student.points -= item.cost;
+            await student.save();
+
+            return res.status(201).json({
+                message: "Pet purchased successfully.",
+                points: student.points,
+                pet: newPet,
+            });
+        }
+
         student.points -= item.cost;
 
         let inventoryItem = await InventoryItem.findOne({
@@ -99,7 +140,6 @@ router.post("/buy", protect, async (req, res) => {
         });
 
         await student.save();
-        await inventoryItem.save();
 
         res.status(201).json({
             message: "Item purchased successfully.",
