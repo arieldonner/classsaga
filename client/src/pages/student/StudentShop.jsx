@@ -55,6 +55,11 @@ export default function StudentShop() {
         setInventory(res.data);
     };
 
+    const fetchOwnedPets = async () => {
+        const res = await api.get("/api/pets/my-pets");
+        setOwnedPets(res.data);
+    };
+
     const handleBuy = async (shopItemId) => {
         setError("");
         setMessage("");
@@ -64,9 +69,13 @@ export default function StudentShop() {
 
             setCurrentPoints(res.data.points);
             updateUser({ points: res.data.points });
-            await fetchInventory();
+            if (res.data.pet) {
+                await fetchOwnedPets();
+            } else {
+                await fetchInventory();
+            }
 
-            setMessage(res.data.message || "Item purchased successfully.");
+            setMessage(res.data.message || "Purchase successful.");
         } catch (err) {
             setError(err.response?.data?.message || "Failed to buy item.");
         }

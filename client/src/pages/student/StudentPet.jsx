@@ -401,6 +401,9 @@ export default function StudentPet() {
     };
 
     const handleSwitchPet = async (petId) => {
+        setActionError("");
+        setStatChanges({});
+        
         try {
             const res = await api.patch(`/api/pets/${petId}/activate`);
 

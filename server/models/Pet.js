@@ -17,7 +17,7 @@ const petSchema = new mongoose.Schema(
 
         name: {
             type: String,
-            default: "My Pet",
+            required: true,
             trim: true,
         },
 
