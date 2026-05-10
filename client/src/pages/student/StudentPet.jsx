@@ -317,11 +317,15 @@ export default function StudentPet() {
 
             const updatedPet = res.data.pet;
             const item = inventoryItem.shopItem;
+
             setTimeout(() => {
                 setPet(updatedPet);
-                if (item.category === "food") {
+                if (item.animationType === "feed") {
                     setFeedEffect(item.imageKey);
                     setTimeout(() => setFeedEffect(null), 2500);
+                } else if (item.animationType === "play") {
+                    setShowBall(true);
+                    setTimeout(() => setShowBall(false), 2500);
                 }
             }, 100);
             await fetchInventory();
