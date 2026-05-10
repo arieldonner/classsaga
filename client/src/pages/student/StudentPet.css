@@ -136,3 +136,66 @@
   position: relative;
   display: inline-block;
 }
+
+@keyframes chomp {
+  0%   { transform: translateX(-50%) scale(1);    opacity: 1;   }
+  15%  { transform: translateX(-50%) scale(0.82); opacity: 1;   }
+  25%  { transform: translateX(-50%) scale(0.92); opacity: 1;   }
+  40%  { transform: translateX(-50%) scale(0.65); opacity: 1;   }
+  50%  { transform: translateX(-50%) scale(0.74); opacity: 0.9; }
+  65%  { transform: translateX(-50%) scale(0.46); opacity: 0.8; }
+  75%  { transform: translateX(-50%) scale(0.55); opacity: 0.7; }
+  90%  { transform: translateX(-50%) scale(0.22); opacity: 0.4; }
+  100% { transform: translateX(-50%) scale(0);    opacity: 0;   }
+}
+
+.pet-food-anim {
+  position: absolute;
+  bottom: 50px;
+  left: 35%;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: chomp 2.5s ease-in forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes eating-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%       { transform: translateY(6px) rotate(-6deg); }
+  60%       { transform: translateY(3px) rotate(-3deg); }
+}
+
+.pet-container.eating .pet-sprite {
+  animation: eating-bob 0.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+  25%  { transform: translateX(-50%) translateY(-80px); opacity: 1; }
+  50%  { transform: translateX(-50%) translateY(0);    opacity: 1; }
+  75%  { transform: translateX(-50%) translateY(-40px); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0);    opacity: 0; }
+}
+
+.pet-ball-anim {
+  position: absolute;
+  bottom: 80px;
+  left: 25%;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: bounce 2.5s ease-in forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes play-hop {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-20px); }
+}
+
+.pet-container.playing .pet-sprite {
+  animation: play-hop 0.4s ease-in-out infinite;
+}

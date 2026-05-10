@@ -4,11 +4,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
-
-// import wolfyImage from "../../assets/pets/wolfy.png";
-// import penguImage from "../../assets/pets/Pengu.png";
-// import snazakeImage from "../../assets/pets/Snazake.png";
-
 import "./StudentPet.css";
 
 export default function StudentPet() {
@@ -26,6 +21,8 @@ export default function StudentPet() {
     const [inventory, setInventory] = useState([]);
     const [statChanges, setStatChanges] = useState({});
     const [ownedPets, setOwnedPets] = useState([]);
+    const [feedEffect, setFeedEffect] = useState(null);
+    const [showBall, setShowBall] = useState(false);
 
     const navigate = useNavigate();
 
@@ -166,7 +163,7 @@ export default function StudentPet() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (reaction) return;
+            if (reaction || feedEffect) return;
             const direction = Math.random() > 0.5 ? "hop-right" : "hop-left";
             setHopDirection(direction);
 
@@ -176,7 +173,7 @@ export default function StudentPet() {
         }, 9000);
 
         return () => clearInterval(interval);
-    }, [reaction]);
+    }, [reaction, feedEffect]);
 
     const handleFeed = async () => {
         setActionError("");
@@ -210,10 +207,13 @@ export default function StudentPet() {
                     `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
-            setReaction("react-feed");
+            setFeedEffect("/assets/effects/PetFood.png");
             setTimeout(() => {
-                setReaction("");
-            }, 500);
+                setFeedEffect(null);
+                setReaction("react-feed");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
+
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
@@ -252,10 +252,12 @@ export default function StudentPet() {
                 );
             }
 
-            setReaction("react-play");
+            setShowBall(true);
             setTimeout(() => {
-                setReaction("");
-            }, 600);
+                setShowBall(false);
+                setReaction("react-play");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
@@ -314,12 +316,15 @@ export default function StudentPet() {
             });
 
             const updatedPet = res.data.pet;
+            const item = inventoryItem.shopItem;
             setTimeout(() => {
                 setPet(updatedPet);
+                if (item.category === "food") {
+                    setFeedEffect(item.imageKey);
+                    setTimeout(() => setFeedEffect(null), 2500);
+                }
             }, 100);
             await fetchInventory();
-
-            const item = inventoryItem.shopItem;
 
             const messages = [`Used ${item.name} on ${updatedPet.name}`];
 
@@ -490,7 +495,7 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center h-100"
                                         style={{ minHeight: "420px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction}`}>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""}`}>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -509,6 +514,22 @@ export default function StudentPet() {
                                             </div>
                                         </div>
                                     </div>
+
+                                {feedEffect && (
+                                    <img 
+                                        src={feedEffect} 
+                                        alt="Food" 
+                                        className="pet-food-anim" 
+                                    />
+                                )}
+
+                                {showBall && (
+                                    <img
+                                        src="/assets/effects/BallOfSlime.png"
+                                        alt="Ball"
+                                        className="pet-ball-anim"
+                                    />
+                                )}
                                 </div>
                             </div>
                         </div>
