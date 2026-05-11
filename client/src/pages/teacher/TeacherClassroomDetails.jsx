@@ -24,6 +24,17 @@ export default function TeacherClassroomDetails() {
     const [activity, setActivity] = useState([]);
     const [loadingActivity, setLoadingActivity] = useState(true);
 
+    const [useCustomReason, setUseCustomReason] = useState(false);
+
+    const reasonPresets = [
+        "Great effort",
+        "Homework completed",
+        "Class participation",
+        "Helping others",
+        "Test bonus",
+        "Extra credit",
+    ];
+
     const fetchClassroom = async () => {
         try {
             const res = await api.get(`/api/classrooms/${id}`);
@@ -295,14 +306,35 @@ export default function TeacherClassroomDetails() {
                     </div>
 
                     <div className="col-md-9">
-                    <label className="form-label">Reason</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        placeholder="Example: Great effort"
-                    />
+                        <label className="form-label">Reason</label>
+                        <select
+                            className="form-select mb-2"
+                            value={useCustomReason ? "custom" : reason}
+                            onChange={(e) => {
+                                if (e.target.value === "custom") {
+                                    setUseCustomReason(true);
+                                    setReason("");
+                                } else {
+                                    setUseCustomReason(false);
+                                    setReason(e.target.value);
+                                }
+                            }}
+                        >
+                            <option value="">Select a reason...</option>
+                            {reasonPresets.map((preset) => (
+                                <option key={preset} value={preset}>{preset}</option>
+                            ))}
+                            <option value="custom">Custom...</option>
+                        </select>
+                        {useCustomReason && (
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Enter custom reason"
+                            />
+                        )}
                     </div>
                 </div>
 
