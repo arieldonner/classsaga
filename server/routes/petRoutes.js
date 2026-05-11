@@ -373,7 +373,7 @@ router.post("/choose-starter", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can choose a starter pet." });
         }
 
-        const { species } = req.body;
+        const { species, name } = req.body;
 
         const petType = PET_TYPES[species];
 
@@ -392,7 +392,7 @@ router.post("/choose-starter", protect, async (req, res) => {
 
         const pet = await Pet.create({
             student: req.user._id,
-            name: petType.name,
+            name: name?.trim() || petType.name,
             species: petType.species,
             isActive: true,
         });
@@ -435,5 +435,27 @@ router.patch("/:petId/activate", protect, async (req, res) => {
         res.status(500).json({ message: "Failed to switch pet." });
     }
 });
+
+// Rename pet
+router.patch("/:id/rename", protect, async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name?.trim()) {
+            return res.status(400).json({ message: "Name is required." });
+        }
+        const pet = await Pet.findOneAndUpdate(
+            { _id: req.params.id, student: req.user._id },
+            { name: name.trim() },
+            { new: true }
+        );
+        if (!pet) {
+            return res.status(404).json({ message: "Pet not found." });
+        }
+        res.json(pet);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to rename pet." });
+    }
+});
+
 
 module.exports = router;

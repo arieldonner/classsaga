@@ -23,6 +23,8 @@ export default function StudentPet() {
     const [ownedPets, setOwnedPets] = useState([]);
     const [feedEffect, setFeedEffect] = useState(null);
     const [showBall, setShowBall] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState("");
 
     const navigate = useNavigate();
 
@@ -427,6 +429,17 @@ export default function StudentPet() {
         }
     };
 
+    const handleRenamePet = async () => {
+        if (!nameInput.trim()) return setIsEditingName(false);
+        try {
+            const res = await api.patch(`/api/pets/${pet._id}/rename`, { name: nameInput });
+            setPet(res.data);
+            setIsEditingName(false);
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to rename pet.");
+        }
+    };
+
     const statColor = (value) => {
         if (value >= 60) return "#4a9e6b";
         if (value >= 30) return "#c8922a";
@@ -551,7 +564,33 @@ export default function StudentPet() {
                                 {/* Top Header Row */}
                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                     <div>
-                                        <h3 className="mb-1">{pet.name}</h3>
+                                        {isEditingName ? (
+                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                <input
+                                                    className="form-control form-control-sm"
+                                                    style={{ maxWidth: "160px" }}
+                                                    value={nameInput}
+                                                    onChange={(e) => setNameInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
+                                                    autoFocus
+                                                    maxLength={20}
+                                                />
+                                                <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
+                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setIsEditingName(false)}>Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                <h3 className="mb-0">{pet.name}</h3>
+                                               <button
+                                                    className="btn btn-sm"
+                                                    onClick={() => { setNameInput(pet.name); setIsEditingName(true); }}
+                                                    title="Rename pet"
+                                                    style={{ color: "var(--color-border)", background: "none", border: "none", padding: "0 4px" }}
+                                                >
+                                                    <i className="bi bi-pencil-fill" style={{ fontSize: "0.8rem" }}></i>
+                                                </button>
+                                            </div>
+                                        )}
                                         <p className="text-muted mb-1">Species: {pet.species}</p>
 
                                         <p className="mb-1">

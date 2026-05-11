@@ -1,3 +1,7 @@
+h1, h2, h3, h4, h5 {
+    font-family: 'Philosopher', serif;
+}
+
 @keyframes petIdle {
   0% {
     transform: translateY(0) rotate(0deg) scale(1);
@@ -155,7 +159,7 @@ body {
 
 .card {
   background-color: var(--color-parchment);
-  border: 2px solid var(--color-border) !important;
+  border: 2px solid var(--color-border);
   border-radius: 10px !important;
 }
 

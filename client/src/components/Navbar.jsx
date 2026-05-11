@@ -17,14 +17,14 @@ export default function Navbar() {
         : "/login";
 
     return (
-        <nav className="navbar navbar-light bg-light px-3">
+        <nav className="navbar navbar-light px-3">
             <div className="d-flex align-items-center gap-3">
-                <Link className="navbar-brand fw-bold mb-0" to={homeLink}>
+                <Link className="navbar-brand fw-bold mb-0" to={homeLink} style={{ fontFamily: "'Philosopher', serif", fontSize: "1.4rem" }}>
                     EduSaga
                 </Link>
 
                 {user?.role === "student" && (
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-4">
                         <Link className="nav-link" to="/student">
                             Dashboard
                         </Link>
@@ -40,7 +40,7 @@ export default function Navbar() {
                 )}
 
                 {user?.role === "teacher" && (
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-4">
                         <Link className="nav-link" to="/teacher">
                             Dashboard
                         </Link>

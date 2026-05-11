@@ -14,11 +14,18 @@ export default function ChooseStarterPet() {
     const [loading, setLoading] = useState(true);
     const [choosing, setChoosing] = useState(false);
     const [error, setError] = useState("");
+    const [petName, setPetName] = useState("");
 
     const petImages = {
         wolfy: wolfyImage,
         pengu: penguImage,
         snazake: snazakeImage,
+    };
+
+    const petDescriptions = {
+        wolfy: "A loyal and fierce companion. Excels in strength.",
+        pengu: "Cool under pressure. Quick and dependable.",
+        snazake: "Mysterious and agile. Full of surprises.",
     };
 
     useEffect(() => {
@@ -49,6 +56,7 @@ export default function ChooseStarterPet() {
         try {
             await api.post("/api/pets/choose-starter", {
                 species: selectedSpecies,
+                name: petName,
             });
 
             navigate("/student/pet");
@@ -64,7 +72,7 @@ export default function ChooseStarterPet() {
             <div className="text-center mb-4">
                 <h2>Choose Your Starter Pet</h2>
                 <p className="text-muted mb-0">
-                    Pick your first companion. You can collect more pets later.
+                    Pick your first companion and give them a name. You can collect more pets later.
                 </p>
             </div>
 
@@ -78,17 +86,18 @@ export default function ChooseStarterPet() {
                             <div className="col-md-4" key={pet.species}>
                                 <button
                                     type="button"
-                                    className={`card shadow-sm p-4 w-100 h-100 text-center ${
-                                        selectedSpecies === pet.species
-                                            ? "border-primary border-3"
-                                            : ""
-                                    }`}
+                                    className="card shadow-sm p-4 w-100 h-100 text-center"
                                     onClick={() => setSelectedSpecies(pet.species)}
-                                    style={{ cursor: "pointer" }}
+                                    style={{
+                                        cursor: "pointer",
+                                        border: selectedSpecies === pet.species
+                                            ? "3px solid var(--color-green)"
+                                            : "2px solid var(--color-border)"
+                                    }}
                                 >
                                     <div
-                                        className="bg-light rounded d-flex align-items-center justify-content-center mb-3"
-                                        style={{ minHeight: "220px" }}
+                                        className="rounded d-flex align-items-center justify-content-center mb-3"
+                                        style={{ minHeight: "280px", backgroundColor: "var(--color-panel)" }}
                                     >
                                         <img
                                             src={petImages[pet.species]}
@@ -99,9 +108,26 @@ export default function ChooseStarterPet() {
                                     </div>
 
                                     <h4>{pet.name}</h4>
+                                    <p className="text-muted mt-2" style={{ fontSize: "0.9rem" }}>
+                                        {petDescriptions[pet.species]}
+                                    </p>
+
                                 </button>
                             </div>
                         ))}
+                    </div>
+
+                    <div className="d-flex flex-column align-items-center mb-3">
+                        <input
+                            type="text"
+                            className="form-control"
+                            style={{ maxWidth: "300px" }}
+                            placeholder="Name your pet..."
+                            value={petName}
+                            onChange={(e) => setPetName(e.target.value)}
+                            maxLength={20}
+                        />
+                        <small className="text-muted">Leave blank to use the default pet name.</small>
                     </div>
 
                     <div className="text-center">
