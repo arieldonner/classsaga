@@ -153,7 +153,7 @@ h1, h2, h3, h4, h5 {
 }
 
 body {
-  background-color: #f5ede0;
+  background-color: var(--color-panel);
   color: var(--color-text);
 }
 
@@ -197,4 +197,33 @@ body {
 .navbar {
   background-color: var(--color-parchment) !important;
   border-bottom: 2px solid var(--color-border);
+}
+
+.table {
+    color: var(--color-text);
+}
+
+.table thead th {
+    background-color: var(--color-panel);
+    border-color: var(--color-border);
+    font-family: 'Philosopher', serif;
+}
+
+.table td, .table th {
+    border-color: var(--color-border);
+}
+
+.table-bordered {
+    border-color: var(--color-border);
+}
+
+.list-group-item {
+    background-color: var(--color-parchment);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.list-group-item-action:hover {
+    background-color: #e8d5bc;
+    color: var(--color-text);
 }

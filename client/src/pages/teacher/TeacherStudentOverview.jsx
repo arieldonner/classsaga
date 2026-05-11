@@ -23,6 +23,12 @@ export default function TeacherStudentOverview() {
         fetchStudents();
     }, [id]);
 
+    const statColor = (value) => {
+        if (value >= 60) return "#4a9e6b";
+        if (value >= 30) return "#c8922a";
+        return "#c0392b";
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -41,13 +47,14 @@ export default function TeacherStudentOverview() {
                     <table className="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th style={{ width: "250px" }}>Name</th>
                                 <th>Points</th>
                                 <th>Pet</th>
                                 <th>Level</th>
                                 <th>Hunger</th>
                                 <th>Happiness</th>
                                 <th>Cleanliness</th>
+                                <th style={{ width: "125px" }}>Last Active</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,9 +68,32 @@ export default function TeacherStudentOverview() {
                                     <td>{s.points}</td>
                                     <td>{s.pet?.name || "No pet"}</td>
                                     <td>{s.pet?.level ?? "-"}</td>
-                                    <td>{s.pet?.hunger ?? "-"}</td>
-                                    <td>{s.pet?.happiness ?? "-"}</td>
-                                    <td>{s.pet?.cleanliness ?? "-"}</td>
+                                    <td>
+                                        {s.pet ? (
+                                            <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                                <div className="progress-bar" style={{ width: `${s.pet.hunger}%`, backgroundColor: statColor(s.pet.hunger) }} />
+                                            </div>
+                                        ) : "-"}
+                                    </td>
+                                    <td>
+                                        {s.pet ? (
+                                            <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                                <div className="progress-bar" style={{ width: `${s.pet.happiness}%`, backgroundColor: statColor(s.pet.happiness) }} />
+                                            </div>
+                                        ) : "-"}
+                                    </td>
+                                    <td>
+                                        {s.pet ? (
+                                            <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                                <div className="progress-bar" style={{ width: `${s.pet.cleanliness}%`, backgroundColor: statColor(s.pet.cleanliness) }} />
+                                            </div>
+                                        ) : "-"}
+                                    </td>
+                                    <td>
+                                        {s.pet?.updatedAt
+                                            ? new Date(s.pet.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                                            : "-"}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

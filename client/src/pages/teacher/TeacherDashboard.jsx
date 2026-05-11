@@ -57,7 +57,7 @@ export default function TeacherDashboard() {
                                         )}
                                     </div>
 
-                                    <span className="badge text-bg-secondary">
+                                    <span className="badge align-self-center" style={{ backgroundColor: "var(--color-amber)", color: "white" }}>
                                         Code: {classroom.joinCode}
                                     </span>
                                 </Link>

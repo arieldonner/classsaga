@@ -228,6 +228,7 @@ router.get("/:id/students-overview", protect, async (req, res) => {
                             hunger: pet.hunger,
                             happiness: pet.happiness,
                             cleanliness: pet.cleanliness,
+                            updatedAt: pet.updatedAt,
                       }
                     : null,
             };
