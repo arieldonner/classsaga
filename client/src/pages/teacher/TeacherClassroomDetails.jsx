@@ -25,6 +25,7 @@ export default function TeacherClassroomDetails() {
     const [loadingActivity, setLoadingActivity] = useState(true);
 
     const [useCustomReason, setUseCustomReason] = useState(false);
+    const [hoveredStudent, setHoveredStudent] = useState(null);
 
     const reasonPresets = [
         "Great effort",
@@ -172,6 +173,16 @@ export default function TeacherClassroomDetails() {
         setAwardError(err.response?.data?.message || "Failed to award points.");
         } finally {
         setAwarding(false);
+        }
+    };
+
+    const handleRemoveStudent = async (studentId, studentName) => {
+        if (!window.confirm(`Remove ${studentName} from this classroom?`)) return;
+        try {
+            const res = await api.delete(`/api/classrooms/${id}/students/${studentId}`);
+            setClassroom(res.data);
+        } catch (err) {
+            setAwardError(err.response?.data?.message || "Failed to remove student.");
         }
     };
 
@@ -382,25 +393,42 @@ export default function TeacherClassroomDetails() {
                 ) : (
                 <div className="list-group">
                     {classroom.students.map((student) => (
-                    <label
+                    <div
                         key={student._id}
                         className="list-group-item d-flex justify-content-between align-items-center"
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={() => setHoveredStudent(student._id)}
+                        onMouseLeave={() => setHoveredStudent(null)}
+                        onClick={() => handleStudentToggle(student._id)}
                     >
                         <div>
-                        <div className="fw-semibold">{student.name}</div>
-                        <small className="text-muted">
-                            {student.username && `Username: ${student.username} • `}
-                            Points: {student.points ?? 0}
-                        </small>
+                            <div className="fw-semibold">{student.name}</div>
+                            <small className="text-muted">
+                                {student.username && `Username: ${student.username} • `}
+                                Points: {student.points ?? 0}
+                            </small>
                         </div>
 
-                        <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedStudents.includes(student._id)}
-                        onChange={() => handleStudentToggle(student._id)}
-                        />
-                    </label>
+                        <div className="d-flex align-items-center gap-3">
+                            {hoveredStudent === student._id && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    style={{ color: "#c0392b", border: "none", background: "none", padding: "0 4px" }}
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveStudent(student._id, student.name); }}
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                            )}
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                style={{ width: "1.3em", height: "1.3em", cursor: "pointer" }}
+                                checked={selectedStudents.includes(student._id)}
+                                onChange={() => handleStudentToggle(student._id)}
+                            />
+                        </div>
+                    </div>
                     ))}
                 </div>
                 )}

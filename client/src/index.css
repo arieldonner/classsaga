@@ -233,3 +233,12 @@ a.text-decoration-none.card:hover {
     transition: background-color 0.15s ease;
 }
 
+.form-check-input:checked {
+    background-color: var(--color-green);
+    border-color: var(--color-green);
+}
+
+.form-check-input {
+    border-color: var(--color-border);
+}
+

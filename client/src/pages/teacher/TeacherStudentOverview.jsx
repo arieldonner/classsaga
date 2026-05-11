@@ -32,13 +32,13 @@ export default function TeacherStudentOverview() {
     };
 
     const displayedStudents = [...students]
-        .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => {
-            if (sortBy === "points") return b.points - a.points;
-            if (sortBy === "level") return (b.pet?.level ?? 0) - (a.pet?.level ?? 0);
-            if (sortBy === "lastActive") return new Date(b.pet?.updatedAt ?? 0) - new Date(a.pet?.updatedAt ?? 0);
-            return a.name.localeCompare(b.name);
-        });
+    .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+        if (sortBy === "points") return b.points - a.points;
+        if (sortBy === "level") return (b.pet?.level ?? 0) - (a.pet?.level ?? 0);
+        if (sortBy === "lastActive") return new Date(b.pet?.updatedAt ?? 0) - new Date(a.pet?.updatedAt ?? 0);
+        return a.name.localeCompare(b.name);
+    });
 
     return (
         <div className="container py-4">
