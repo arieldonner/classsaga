@@ -26,6 +26,7 @@ export default function StudentPet() {
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
+    const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
 
     const navigate = useNavigate();
 
@@ -797,11 +798,25 @@ export default function StudentPet() {
                                     <div>
                                         <h5 className="mb-3">Inventory</h5>
 
+                                        <div className="btn-group btn-group-sm mb-3">
+                                            {["all", "food", "toy", "care", "accessory", "background"].map((cat) => (
+                                                <button
+                                                    key={cat}
+                                                    className={`btn btn-sm ${selectedInventoryCategory === cat ? "btn-primary" : "btn-outline-secondary"}`}
+                                                    onClick={() => setSelectedInventoryCategory(cat)}
+                                                >
+                                                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div>
+
                                         {inventory.length === 0 ? (
                                             <p className="mb-0">You do not own any items yet.</p>
                                         ) : (
                                             <div className="inventory-grid tab-scroll">
-                                                {inventory.map((inv) => {
+                                                {inventory
+                                                .filter(inv => selectedInventoryCategory === "all" || inv.shopItem?.category === selectedInventoryCategory)
+                                                .map((inv) => {
                                                     const item = inv.shopItem;
 
                                                     return (

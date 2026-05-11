@@ -7,6 +7,8 @@ export default function TeacherStudentOverview() {
 
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+    const [sortBy, setSortBy] = useState("name");
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -29,13 +31,44 @@ export default function TeacherStudentOverview() {
         return "#c0392b";
     };
 
+    const displayedStudents = [...students]
+        .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            if (sortBy === "points") return b.points - a.points;
+            if (sortBy === "level") return (b.pet?.level ?? 0) - (a.pet?.level ?? 0);
+            if (sortBy === "lastActive") return new Date(b.pet?.updatedAt ?? 0) - new Date(a.pet?.updatedAt ?? 0);
+            return a.name.localeCompare(b.name);
+        });
+
     return (
         <div className="container py-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2>Student Overview</h2>
                 <Link to={`/teacher/classrooms/${id}`} className="btn btn-outline-secondary">
                     Back to Classroom
                 </Link>
+            </div>
+
+            <div className="d-flex gap-3 mb-3">
+                <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by name..."
+                    style={{ maxWidth: "250px" }}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <select
+                    className="form-select"
+                    style={{ maxWidth: "180px" }}
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                >
+                    <option value="name">Sort: Name</option>
+                    <option value="points">Sort: Points</option>
+                    <option value="level">Sort: Level</option>
+                    <option value="lastActive">Sort: Last Active</option>
+                </select>
             </div>
 
             {loading ? (
@@ -58,7 +91,7 @@ export default function TeacherStudentOverview() {
                             </tr>
                         </thead>
                         <tbody>
-                            {students.map((s) => (
+                            {displayedStudents.map((s) => (
                                 <tr key={s._id}>
                                     <td>
                                         {s.name}

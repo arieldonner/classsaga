@@ -14,6 +14,7 @@ export default function StudentShop() {
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const [inventory, setInventory] = useState([]);
     const [ownedPets, setOwnedPets] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("all");
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -99,12 +100,25 @@ export default function StudentShop() {
             {error && <div className="alert alert-danger">{error}</div>}
             {message && <div className="alert alert-success">{message}</div>}
 
+            <div className="btn-group btn-group-sm mb-3">
+                {["all", "food", "toy", "care", "accessory", "background", "pet"].map((cat) => (
+                    <button
+                        key={cat}
+                        className={`btn btn-sm ${selectedCategory === cat ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setSelectedCategory(cat)}
+                    >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                ))}
+            </div>
+
             {!loading && !error && (
                 <div className="row g-3">
                     {items.length === 0 ? (
                         <p>No items available yet.</p>
-                    ) : (
-                        items.map((item) => {
+                    ) : (items
+                        .filter(item => selectedCategory === "all" || item.category === selectedCategory)
+                        .map((item) => {
                             const ownedItem = getInventoryForItem(item._id);
                             const ownedQuantity = ownedItem?.quantity || 0;
                             const alreadyOwnsCosmetic =
