@@ -65,6 +65,12 @@ export default function StudentDashboard() {
         fetchPet();
     }, []);
 
+    const statColor = (value) => {
+        if (value >= 60) return "#4a9e6b";
+        if (value >= 30) return "#c8922a";
+        return "#c0392b";
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -80,27 +86,49 @@ export default function StudentDashboard() {
                 </div>
             </div>
 
-            <div className="card shadow-sm p-4 mb-4">
-                <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 className="mb-2">My Pet</h4>
-
+            <Link to="/student/pet" className="card shadow-sm p-4 mb-4 text-decoration-none text-dark hover-effect">
+                <div className="d-flex align-items-center gap-4">
+                    {pet && (
+                        <img
+                            src={`/assets/pets/${pet.species}.png`}
+                            alt={pet.name}
+                            style={{ height: "100px", objectFit: "contain" }}
+                        />
+                    )}
+                    <div className="d-flex flex-column">
+                        <h4 className="mb-1">My Pet</h4>
                         {loadingPet ? (
                             <p className="mb-0">Loading pet...</p>
                         ) : pet ? (
-                            <p className="mb-0">
-                                {pet.name} • Level {pet.level} • XP {pet.experience}/100
-                            </p>
+                            <>
+                                <p className="mb-2">{pet.name} • Level {pet.level} • XP {pet.experience}/100</p>
+                                <div className="d-flex gap-3">
+                                    <div>
+                                        <small className="text-muted d-block">Hunger</small>
+                                        <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                            <div className="progress-bar" style={{ width: `${pet.hunger}%`, backgroundColor: statColor(pet.hunger) }} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <small className="text-muted d-block">Happiness</small>
+                                        <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                            <div className="progress-bar" style={{ width: `${pet.happiness}%`, backgroundColor: statColor(pet.happiness) }} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <small className="text-muted d-block">Cleanliness</small>
+                                        <div className="progress" style={{ height: "8px", width: "80px" }}>
+                                            <div className="progress-bar" style={{ width: `${pet.cleanliness}%`, backgroundColor: statColor(pet.cleanliness) }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         ) : (
                             <p className="mb-0">No pet found.</p>
                         )}
                     </div>
-
-                    <Link to="/student/pet" className="btn btn-outline-primary">
-                        View Pet
-                    </Link>
                 </div>
-            </div>
+            </Link>
 
             {loading && <p>Loading classrooms...</p>}
 

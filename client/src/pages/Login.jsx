@@ -38,9 +38,15 @@ export default function Login() {
     };
 
    return (
-    <div className="container-fluid d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div className="container-fluid d-flex justify-content-center align-items-center vh-100">
         <div className="card p-4 shadow" style={{ width: "100%", maxWidth: "400px" }}>
-        <h3 className="text-center mb-4">EduSaga Login</h3>
+        <div className="text-center mb-4">
+            <h2 style={{ color: "var(--color-text)", fontFamily: "'Philosopher', serif", letterSpacing: "1px" }}>
+                EduSaga
+            </h2>
+
+            <p className="text-muted mb-0">Sign in to continue</p>
+        </div>
 
         <div className="mb-3">
             <label className="form-label fw-bold">Login As:</label>

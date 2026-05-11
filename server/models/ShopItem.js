@@ -75,6 +75,10 @@ const shopItemSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        animationType: {
+            type: String,
+            default: "none",
+        },
     },
     { timestamps: true }
 );

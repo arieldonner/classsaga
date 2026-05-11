@@ -228,6 +228,7 @@ router.get("/:id/students-overview", protect, async (req, res) => {
                             hunger: pet.hunger,
                             happiness: pet.happiness,
                             cleanliness: pet.cleanliness,
+                            updatedAt: pet.updatedAt,
                       }
                     : null,
             };
@@ -238,5 +239,29 @@ router.get("/:id/students-overview", protect, async (req, res) => {
         res.status(500).json({ message: "Failed to fetch student overview." });
     }
 });
+
+// Remove student from classroom
+router.delete("/:id/students/:studentId", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "teacher") {
+            return res.status(403).json({ message: "Only teachers can remove students." });
+        }
+
+        const classroom = await Classroom.findOneAndUpdate(
+            { _id: req.params.id, teacher: req.user._id },
+            { $pull: { students: req.params.studentId } },
+            { new: true }
+        ).populate("students", "name username points");
+
+        if (!classroom) {
+            return res.status(404).json({ message: "Classroom not found." });
+        }
+
+        res.json(classroom);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to remove student." });
+    }
+});
+
 
 module.exports = router;

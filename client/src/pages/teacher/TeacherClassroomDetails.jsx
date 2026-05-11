@@ -24,6 +24,18 @@ export default function TeacherClassroomDetails() {
     const [activity, setActivity] = useState([]);
     const [loadingActivity, setLoadingActivity] = useState(true);
 
+    const [useCustomReason, setUseCustomReason] = useState(false);
+    const [hoveredStudent, setHoveredStudent] = useState(null);
+
+    const reasonPresets = [
+        "Great effort",
+        "Homework completed",
+        "Class participation",
+        "Helping others",
+        "Test bonus",
+        "Extra credit",
+    ];
+
     const fetchClassroom = async () => {
         try {
             const res = await api.get(`/api/classrooms/${id}`);
@@ -164,6 +176,16 @@ export default function TeacherClassroomDetails() {
         }
     };
 
+    const handleRemoveStudent = async (studentId, studentName) => {
+        if (!window.confirm(`Remove ${studentName} from this classroom?`)) return;
+        try {
+            const res = await api.delete(`/api/classrooms/${id}/students/${studentId}`);
+            setClassroom(res.data);
+        } catch (err) {
+            setAwardError(err.response?.data?.message || "Failed to remove student.");
+        }
+    };
+
     const selectedStudentNames =
         classroom?.students
         .filter((student) => selectedStudents.includes(student._id))
@@ -295,14 +317,35 @@ export default function TeacherClassroomDetails() {
                     </div>
 
                     <div className="col-md-9">
-                    <label className="form-label">Reason</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        placeholder="Example: Great effort"
-                    />
+                        <label className="form-label">Reason</label>
+                        <select
+                            className="form-select mb-2"
+                            value={useCustomReason ? "custom" : reason}
+                            onChange={(e) => {
+                                if (e.target.value === "custom") {
+                                    setUseCustomReason(true);
+                                    setReason("");
+                                } else {
+                                    setUseCustomReason(false);
+                                    setReason(e.target.value);
+                                }
+                            }}
+                        >
+                            <option value="">Select a reason...</option>
+                            {reasonPresets.map((preset) => (
+                                <option key={preset} value={preset}>{preset}</option>
+                            ))}
+                            <option value="custom">Custom...</option>
+                        </select>
+                        {useCustomReason && (
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Enter custom reason"
+                            />
+                        )}
                     </div>
                 </div>
 
@@ -350,25 +393,42 @@ export default function TeacherClassroomDetails() {
                 ) : (
                 <div className="list-group">
                     {classroom.students.map((student) => (
-                    <label
+                    <div
                         key={student._id}
                         className="list-group-item d-flex justify-content-between align-items-center"
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={() => setHoveredStudent(student._id)}
+                        onMouseLeave={() => setHoveredStudent(null)}
+                        onClick={() => handleStudentToggle(student._id)}
                     >
                         <div>
-                        <div className="fw-semibold">{student.name}</div>
-                        <small className="text-muted">
-                            {student.username && `Username: ${student.username} • `}
-                            Points: {student.points ?? 0}
-                        </small>
+                            <div className="fw-semibold">{student.name}</div>
+                            <small className="text-muted">
+                                {student.username && `Username: ${student.username} • `}
+                                Points: {student.points ?? 0}
+                            </small>
                         </div>
 
-                        <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedStudents.includes(student._id)}
-                        onChange={() => handleStudentToggle(student._id)}
-                        />
-                    </label>
+                        <div className="d-flex align-items-center gap-3">
+                            {hoveredStudent === student._id && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    style={{ color: "#c0392b", border: "none", background: "none", padding: "0 4px" }}
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveStudent(student._id, student.name); }}
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                            )}
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                style={{ width: "1.3em", height: "1.3em", cursor: "pointer" }}
+                                checked={selectedStudents.includes(student._id)}
+                                onChange={() => handleStudentToggle(student._id)}
+                            />
+                        </div>
+                    </div>
                     ))}
                 </div>
                 )}

@@ -4,11 +4,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
-
-// import wolfyImage from "../../assets/pets/wolfy.png";
-// import penguImage from "../../assets/pets/Pengu.png";
-// import snazakeImage from "../../assets/pets/Snazake.png";
-
 import "./StudentPet.css";
 
 export default function StudentPet() {
@@ -26,6 +21,12 @@ export default function StudentPet() {
     const [inventory, setInventory] = useState([]);
     const [statChanges, setStatChanges] = useState({});
     const [ownedPets, setOwnedPets] = useState([]);
+    const [feedEffect, setFeedEffect] = useState(null);
+    const [showBall, setShowBall] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState("");
+    const [showLevelUp, setShowLevelUp] = useState(false);
+    const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
 
     const navigate = useNavigate();
 
@@ -166,7 +167,7 @@ export default function StudentPet() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (reaction) return;
+            if (reaction || feedEffect) return;
             const direction = Math.random() > 0.5 ? "hop-right" : "hop-left";
             setHopDirection(direction);
 
@@ -176,7 +177,7 @@ export default function StudentPet() {
         }, 9000);
 
         return () => clearInterval(interval);
-    }, [reaction]);
+    }, [reaction, feedEffect]);
 
     const handleFeed = async () => {
         setActionError("");
@@ -184,6 +185,7 @@ export default function StudentPet() {
         try {
             const previousLevel = pet.level;
             const previousHunger = pet.hunger;
+            const previousExperience = pet.experience;
             
             const res = await api.post("/api/pets/feed");
             setPet(res.data.pet);
@@ -203,17 +205,22 @@ export default function StudentPet() {
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ hunger: hungerIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${res.data.pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
-            setReaction("react-feed");
+            setFeedEffect("/assets/effects/PetFood.png");
             setTimeout(() => {
-                setReaction("");
-            }, 500);
+                setFeedEffect(null);
+                setReaction("react-feed");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
+
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
         }
@@ -225,6 +232,7 @@ export default function StudentPet() {
         try {
             const previousLevel = pet.level;
             const previousHappiness = pet.happiness;
+            const previousExperience = pet.experience;
 
             const res = await api.post("/api/pets/play");
             setPet(res.data.pet);
@@ -244,18 +252,22 @@ export default function StudentPet() {
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ happiness: happinessIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
                 );
             }
 
-            setReaction("react-play");
+            setShowBall(true);
             setTimeout(() => {
-                setReaction("");
-            }, 600);
+                setShowBall(false);
+                setReaction("react-play");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
         }
@@ -266,7 +278,8 @@ export default function StudentPet() {
 
         try {
             const previousLevel = pet.level;
-            const previousCleanliness = pet.cleanliness;    
+            const previousCleanliness = pet.cleanliness;   
+            const previousExperience = pet.experience; 
 
             const res = await api.post("/api/pets/brush");
             setPet(res.data.pet);
@@ -286,8 +299,10 @@ export default function StudentPet() {
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ cleanliness: cleanlinessIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
@@ -314,12 +329,19 @@ export default function StudentPet() {
             });
 
             const updatedPet = res.data.pet;
+            const item = inventoryItem.shopItem;
+
             setTimeout(() => {
                 setPet(updatedPet);
+                if (item.animationType === "feed") {
+                    setFeedEffect(item.imageKey);
+                    setTimeout(() => setFeedEffect(null), 2500);
+                } else if (item.animationType === "play") {
+                    setShowBall(true);
+                    setTimeout(() => setShowBall(false), 2500);
+                }
             }, 100);
             await fetchInventory();
-
-            const item = inventoryItem.shopItem;
 
             const messages = [`Used ${item.name} on ${updatedPet.name}`];
 
@@ -363,6 +385,7 @@ export default function StudentPet() {
             addMessage(messages.join(" • "));
 
             if (updatedPet.level > previousPet.level) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
             }
 
@@ -418,6 +441,28 @@ export default function StudentPet() {
         }
     };
 
+    const handleRenamePet = async () => {
+        if (!nameInput.trim()) return setIsEditingName(false);
+        try {
+            const res = await api.patch(`/api/pets/${pet._id}/rename`, { name: nameInput });
+            setPet(res.data);
+            setIsEditingName(false);
+        } catch (err) {
+            setActionError(err.response?.data?.message || "Failed to rename pet.");
+        }
+    };
+
+    const triggerLevelUp = () => {
+        setShowLevelUp(true);
+        setTimeout(() => setShowLevelUp(false), 3000);
+    };
+
+    const statColor = (value) => {
+        if (value >= 60) return "#4a9e6b";
+        if (value >= 30) return "#c8922a";
+        return "#c0392b";
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -435,7 +480,7 @@ export default function StudentPet() {
                     <div className="row g-4 mb-4">
                         {/* Pet Card */}
                         <div className="col-md-6">
-                            <div className="card shadow-sm p-4 h-100">
+                            <div className="card shadow-sm p-4">
                                 <div className="pet-scene-wrapper position-relative">
                                     {activeTab === "inventory" && (
                                         <div className="equipment-slots">
@@ -487,10 +532,10 @@ export default function StudentPet() {
                                         </div>
                                     )}
                                     <div
-                                        className="border rounded d-flex align-items-center justify-content-center h-100"
-                                        style={{ minHeight: "420px", ...petSceneStyle }}
+                                        className="border rounded d-flex align-items-center justify-content-center"
+                                        style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction}`}>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""}`}>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -509,6 +554,24 @@ export default function StudentPet() {
                                             </div>
                                         </div>
                                     </div>
+
+                                {feedEffect && (
+                                    <img 
+                                        src={feedEffect} 
+                                        alt="Food" 
+                                        className="pet-food-anim" 
+                                    />
+                                )}
+                                {showBall && (
+                                    <img
+                                        src="/assets/effects/BallOfSlime.png"
+                                        alt="Ball"
+                                        className="pet-ball-anim"
+                                    />
+                                )}
+                                {showLevelUp && (
+                                    <div className="level-up-anim">Level Up!</div>
+                                )}
                                 </div>
                             </div>
                         </div>
@@ -520,7 +583,33 @@ export default function StudentPet() {
                                 {/* Top Header Row */}
                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                     <div>
-                                        <h3 className="mb-1">{pet.name}</h3>
+                                        {isEditingName ? (
+                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                <input
+                                                    className="form-control form-control-sm"
+                                                    style={{ maxWidth: "160px" }}
+                                                    value={nameInput}
+                                                    onChange={(e) => setNameInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
+                                                    autoFocus
+                                                    maxLength={20}
+                                                />
+                                                <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
+                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setIsEditingName(false)}>Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                <h3 className="mb-0">{pet.name}</h3>
+                                               <button
+                                                    className="btn btn-sm"
+                                                    onClick={() => { setNameInput(pet.name); setIsEditingName(true); }}
+                                                    title="Rename pet"
+                                                    style={{ color: "var(--color-border)", background: "none", border: "none", padding: "0 4px" }}
+                                                >
+                                                    <i className="bi bi-pencil-fill" style={{ fontSize: "0.8rem" }}></i>
+                                                </button>
+                                            </div>
+                                        )}
                                         <p className="text-muted mb-1">Species: {pet.species}</p>
 
                                         <p className="mb-1">
@@ -619,7 +708,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Hunger{" "}
-                                                {statChanges.hunger && (
+                                                {statChanges.hunger > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.hunger}</span>
                                                 )}
                                             </label>
@@ -627,7 +716,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.hunger}%` }}
+                                                    style={{ width: `${pet.hunger}%`, backgroundColor: statColor(pet.hunger) }}
                                                 >
                                                     {pet.hunger}
                                                 </div>
@@ -637,7 +726,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Happiness{" "}
-                                                {statChanges.happiness && (
+                                                {statChanges.happiness > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.happiness}</span>
                                                 )}
                                             </label>
@@ -645,7 +734,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.happiness}%` }}
+                                                    style={{ width: `${pet.happiness}%`, backgroundColor: statColor(pet.happiness) }}
                                                 >
                                                     {pet.happiness}
                                                 </div>
@@ -655,7 +744,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Cleanliness{" "}
-                                                {statChanges.cleanliness && (
+                                                {statChanges.cleanliness > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.cleanliness}</span>
                                                 )}
                                             </label>
@@ -663,7 +752,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.cleanliness}%` }}
+                                                    style={{ width: `${pet.cleanliness}%`, backgroundColor: statColor(pet.cleanliness) }}
                                                 >
                                                     {pet.cleanliness}
                                                 </div>
@@ -709,11 +798,25 @@ export default function StudentPet() {
                                     <div>
                                         <h5 className="mb-3">Inventory</h5>
 
+                                        <div className="btn-group btn-group-sm mb-3">
+                                            {["all", "food", "toy", "care", "accessory", "background"].map((cat) => (
+                                                <button
+                                                    key={cat}
+                                                    className={`btn btn-sm ${selectedInventoryCategory === cat ? "btn-primary" : "btn-outline-secondary"}`}
+                                                    onClick={() => setSelectedInventoryCategory(cat)}
+                                                >
+                                                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div>
+
                                         {inventory.length === 0 ? (
                                             <p className="mb-0">You do not own any items yet.</p>
                                         ) : (
-                                            <div className="inventory-grid">
-                                                {inventory.map((inv) => {
+                                            <div className="inventory-grid tab-scroll">
+                                                {inventory
+                                                .filter(inv => selectedInventoryCategory === "all" || inv.shopItem?.category === selectedInventoryCategory)
+                                                .map((inv) => {
                                                     const item = inv.shopItem;
 
                                                     return (
@@ -813,7 +916,7 @@ export default function StudentPet() {
                                         {ownedPets.length === 0 ? (
                                             <p className="mb-0">You do not own any pets yet.</p>
                                         ) : (
-                                            <div className="inventory-grid">
+                                            <div className="inventory-grid tab-scroll">
                                                 {ownedPets.map((ownedPet) => (
                                                     <div className="inventory-tile" key={ownedPet._id}>
                                                         <div className="tile-image">

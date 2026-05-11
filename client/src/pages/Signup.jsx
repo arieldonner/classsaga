@@ -38,9 +38,15 @@ export default function Signup() {
     };
 
     return (
-        <div className="vh-100 d-flex justify-content-center align-items-center bg-light">
+        <div className="vh-100 d-flex justify-content-center align-items-center">
         <div className="card shadow p-4" style={{ width: 420 }}>
-            <h3 className="text-center mb-4">Create Account</h3>
+            <div className="text-center mb-4">
+                <h2 style={{ color: "var(--color-text)", fontFamily: "'Philosopher', serif", letterSpacing: "1px" }}>
+                    EduSaga
+                </h2>
+                <p className="text-muted mb-0">Create your account</p>
+            </div>
+
 
             <div className="mb-3">
             <label className="form-label fw-bold">Account Type:</label>
