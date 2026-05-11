@@ -25,6 +25,7 @@ export default function StudentPet() {
     const [showBall, setShowBall] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState("");
+    const [showLevelUp, setShowLevelUp] = useState(false);
 
     const navigate = useNavigate();
 
@@ -204,6 +205,7 @@ export default function StudentPet() {
             addMessage(actionMessage);
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${res.data.pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
@@ -248,6 +250,7 @@ export default function StudentPet() {
             addMessage(actionMessage);
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
@@ -292,6 +295,7 @@ export default function StudentPet() {
             addMessage(actionMessage);
 
             if (res.data.pet.level > previousLevel) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
                 addMessage(
                     `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
@@ -374,6 +378,7 @@ export default function StudentPet() {
             addMessage(messages.join(" • "));
 
             if (updatedPet.level > previousPet.level) {
+                triggerLevelUp();
                 addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
             }
 
@@ -438,6 +443,11 @@ export default function StudentPet() {
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to rename pet.");
         }
+    };
+
+    const triggerLevelUp = () => {
+        setShowLevelUp(true);
+        setTimeout(() => setShowLevelUp(false), 3000);
     };
 
     const statColor = (value) => {
@@ -545,13 +555,15 @@ export default function StudentPet() {
                                         className="pet-food-anim" 
                                     />
                                 )}
-
                                 {showBall && (
                                     <img
                                         src="/assets/effects/BallOfSlime.png"
                                         alt="Ball"
                                         className="pet-ball-anim"
                                     />
+                                )}
+                                {showLevelUp && (
+                                    <div className="level-up-anim">Level Up!</div>
                                 )}
                                 </div>
                             </div>
