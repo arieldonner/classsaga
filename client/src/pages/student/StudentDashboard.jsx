@@ -65,6 +65,12 @@ export default function StudentDashboard() {
         fetchPet();
     }, []);
 
+    const statColor = (value) => {
+        if (value >= 60) return "#4a9e6b";
+        if (value >= 30) return "#c8922a";
+        return "#c0392b";
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -100,19 +106,19 @@ export default function StudentDashboard() {
                                     <div>
                                         <small className="text-muted d-block">Hunger</small>
                                         <div className="progress" style={{ height: "8px", width: "80px" }}>
-                                            <div className="progress-bar" style={{ width: `${pet.hunger}%` }} />
+                                            <div className="progress-bar" style={{ width: `${pet.hunger}%`, backgroundColor: statColor(pet.hunger) }} />
                                         </div>
                                     </div>
                                     <div>
                                         <small className="text-muted d-block">Happiness</small>
                                         <div className="progress" style={{ height: "8px", width: "80px" }}>
-                                            <div className="progress-bar bg-warning" style={{ width: `${pet.happiness}%` }} />
+                                            <div className="progress-bar" style={{ width: `${pet.happiness}%`, backgroundColor: statColor(pet.happiness) }} />
                                         </div>
                                     </div>
                                     <div>
                                         <small className="text-muted d-block">Cleanliness</small>
                                         <div className="progress" style={{ height: "8px", width: "80px" }}>
-                                            <div className="progress-bar bg-info" style={{ width: `${pet.cleanliness}%` }} />
+                                            <div className="progress-bar" style={{ width: `${pet.cleanliness}%`, backgroundColor: statColor(pet.cleanliness) }} />
                                         </div>
                                     </div>
                                 </div>

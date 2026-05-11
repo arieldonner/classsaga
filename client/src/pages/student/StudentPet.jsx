@@ -427,6 +427,12 @@ export default function StudentPet() {
         }
     };
 
+    const statColor = (value) => {
+        if (value >= 60) return "#4a9e6b";
+        if (value >= 30) return "#c8922a";
+        return "#c0392b";
+    };
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -444,7 +450,7 @@ export default function StudentPet() {
                     <div className="row g-4 mb-4">
                         {/* Pet Card */}
                         <div className="col-md-6">
-                            <div className="card shadow-sm p-4 h-100">
+                            <div className="card shadow-sm p-4">
                                 <div className="pet-scene-wrapper position-relative">
                                     {activeTab === "inventory" && (
                                         <div className="equipment-slots">
@@ -496,8 +502,8 @@ export default function StudentPet() {
                                         </div>
                                     )}
                                     <div
-                                        className="border rounded d-flex align-items-center justify-content-center h-100"
-                                        style={{ minHeight: "420px", ...petSceneStyle }}
+                                        className="border rounded d-flex align-items-center justify-content-center"
+                                        style={{ height: "500px", ...petSceneStyle }}
                                     >
                                         <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""}`}>
                                             <div className="pet-sprite pet-idle">
@@ -652,7 +658,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.hunger}%` }}
+                                                    style={{ width: `${pet.hunger}%`, backgroundColor: statColor(pet.hunger) }}
                                                 >
                                                     {pet.hunger}
                                                 </div>
@@ -670,7 +676,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.happiness}%` }}
+                                                    style={{ width: `${pet.happiness}%`, backgroundColor: statColor(pet.happiness) }}
                                                 >
                                                     {pet.happiness}
                                                 </div>
@@ -688,7 +694,7 @@ export default function StudentPet() {
                                                 <div
                                                     className="progress-bar"
                                                     role="progressbar"
-                                                    style={{ width: `${pet.cleanliness}%` }}
+                                                    style={{ width: `${pet.cleanliness}%`, backgroundColor: statColor(pet.cleanliness) }}
                                                 >
                                                     {pet.cleanliness}
                                                 </div>
@@ -737,7 +743,7 @@ export default function StudentPet() {
                                         {inventory.length === 0 ? (
                                             <p className="mb-0">You do not own any items yet.</p>
                                         ) : (
-                                            <div className="inventory-grid">
+                                            <div className="inventory-grid tab-scroll">
                                                 {inventory.map((inv) => {
                                                     const item = inv.shopItem;
 
@@ -838,7 +844,7 @@ export default function StudentPet() {
                                         {ownedPets.length === 0 ? (
                                             <p className="mb-0">You do not own any pets yet.</p>
                                         ) : (
-                                            <div className="inventory-grid">
+                                            <div className="inventory-grid tab-scroll">
                                                 {ownedPets.map((ownedPet) => (
                                                     <div className="inventory-tile" key={ownedPet._id}>
                                                         <div className="tile-image">

@@ -73,7 +73,7 @@
 }
 
 .pet-scene-wrapper {
-  min-height: 420px;
+  height: 500px;
 }
 
 .equipment-slots {
@@ -198,4 +198,9 @@
 
 .pet-container.playing .pet-sprite {
   animation: play-hop 0.4s ease-in-out infinite;
+}
+
+.tab-scroll {
+  max-height: 300px;
+  overflow-y: auto;
 }

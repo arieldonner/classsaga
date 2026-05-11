@@ -138,3 +138,59 @@
   animation: reactBrush 0.4s ease;
   transform-origin: bottom center;
 }
+
+:root {
+  --color-parchment: #fdf6ec;
+  --color-border: #d6c2a8;
+  --color-green: #5a7a4a;
+  --color-amber: #c8922a;
+  --color-text: #3d2b1f;
+  --color-panel: #efe2cf;
+}
+
+body {
+  background-color: #f5ede0;
+  color: var(--color-text);
+}
+
+.card {
+  background-color: var(--color-parchment);
+  border: 2px solid var(--color-border) !important;
+  border-radius: 10px !important;
+}
+
+
+.btn-primary {
+  background-color: var(--color-green);
+  border-color: #4a6a3a;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: #4a6a3a;
+  border-color: #3a5a2a;
+}
+
+.btn-outline-primary {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+.btn-outline-primary:hover {
+  background-color: var(--color-green);
+  border-color: var(--color-green);
+}
+
+.btn-primary:disabled,
+.btn-primary.disabled {
+  background-color: #a89880;
+  border-color: #9a8870;
+  color: white;
+}
+
+
+.progress {
+  background-color: var(--color-panel);
+}
+
+.navbar {
+  background-color: var(--color-parchment) !important;
+  border-bottom: 2px solid var(--color-border);
+}
