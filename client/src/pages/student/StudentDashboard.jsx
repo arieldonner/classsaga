@@ -86,7 +86,7 @@ export default function StudentDashboard() {
                 </div>
             </div>
 
-            <Link to="/student/pet" className="card shadow-sm p-4 mb-4 text-decoration-none text-dark">
+            <Link to="/student/pet" className="card shadow-sm p-4 mb-4 text-decoration-none text-dark hover-effect">
                 <div className="d-flex align-items-center gap-4">
                     {pet && (
                         <img

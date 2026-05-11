@@ -184,6 +184,7 @@ export default function StudentPet() {
         try {
             const previousLevel = pet.level;
             const previousHunger = pet.hunger;
+            const previousExperience = pet.experience;
             
             const res = await api.post("/api/pets/feed");
             setPet(res.data.pet);
@@ -203,6 +204,7 @@ export default function StudentPet() {
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ hunger: hungerIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -229,6 +231,7 @@ export default function StudentPet() {
         try {
             const previousLevel = pet.level;
             const previousHappiness = pet.happiness;
+            const previousExperience = pet.experience;
 
             const res = await api.post("/api/pets/play");
             setPet(res.data.pet);
@@ -248,6 +251,7 @@ export default function StudentPet() {
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ happiness: happinessIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -273,7 +277,8 @@ export default function StudentPet() {
 
         try {
             const previousLevel = pet.level;
-            const previousCleanliness = pet.cleanliness;    
+            const previousCleanliness = pet.cleanliness;   
+            const previousExperience = pet.experience; 
 
             const res = await api.post("/api/pets/brush");
             setPet(res.data.pet);
@@ -293,6 +298,7 @@ export default function StudentPet() {
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
             addMessage(actionMessage);
+            showStatChanges({ cleanliness: cleanlinessIncrease, experience: res.data.pet.experience - previousExperience });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -701,7 +707,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Hunger{" "}
-                                                {statChanges.hunger && (
+                                                {statChanges.hunger > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.hunger}</span>
                                                 )}
                                             </label>
@@ -719,7 +725,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Happiness{" "}
-                                                {statChanges.happiness && (
+                                                {statChanges.happiness > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.happiness}</span>
                                                 )}
                                             </label>
@@ -737,7 +743,7 @@ export default function StudentPet() {
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
                                                 Cleanliness{" "}
-                                                {statChanges.cleanliness && (
+                                                {statChanges.cleanliness > 0 && (
                                                     <span className="text-success ms-2">+{statChanges.cleanliness}</span>
                                                 )}
                                             </label>

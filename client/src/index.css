@@ -224,6 +224,12 @@ body {
 }
 
 .list-group-item-action:hover {
-    background-color: #e8d5bc;
-    color: var(--color-text);
+    background-color: var(--color-panel) !important;
+    color: var(--color-text) !important;
 }
+
+a.text-decoration-none.card:hover {
+    background-color: var(--color-panel);
+    transition: background-color 0.15s ease;
+}
+
