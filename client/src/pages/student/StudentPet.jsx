@@ -28,6 +28,7 @@ export default function StudentPet() {
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
     const [showBrush, setShowBrush] = useState(false);
+    const [animationOffsets, setAnimationOffsets] = useState({});
 
     const navigate = useNavigate();
 
@@ -42,18 +43,12 @@ export default function StudentPet() {
         accessory: null,
     });
 
-    // Temporary use of imageKeys and css for background/accessories
-    const backgroundStyles = {
-    forest: { background: "linear-gradient(135deg, #2e7d32, #81c784)" },
-    beach: { background: "linear-gradient(135deg, #0288d1, #b3e5fc)" },
-    night: { background: "linear-gradient(135deg, #263238, #546e7a)" },
-    };
-
     const bgKey = equipment.background?.shopItem?.imageKey;
 
-    const petSceneStyle = backgroundStyles[bgKey] || {
-        background: "#f8f9fa",
-    };
+    const petSceneStyle = bgKey
+        ? { backgroundImage: `url(${bgKey})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
+        : { background: "var(--color-panel)" };
+
 
     const accessory = equipment.accessory?.shopItem;
 
@@ -114,11 +109,11 @@ export default function StudentPet() {
         );
     };
 
-    useEffect(() => {
-        const fetchPet = async () => {
+    const fetchPet = async () => {
             try {
                 const res = await api.get("/api/pets/my-pet");
                 setPet(res.data);
+                setAnimationOffsets(res.data.animationOffsets || {});
             } catch (err) {
                 if (err.response?.status === 404) {
                     navigate("/student/choose-starter");
@@ -128,8 +123,9 @@ export default function StudentPet() {
             } finally {
                 setLoading(false);
             }
-        };
+    };
 
+    useEffect(() => {
         fetchPet();
         fetchInventory();
         fetchOwnedPets();
@@ -445,7 +441,7 @@ export default function StudentPet() {
         try {
             const res = await api.patch(`/api/pets/${petId}/activate`);
 
-            setPet(res.data.pet);
+            await fetchPet();
             await fetchOwnedPets();
             await fetchEquipment();
 
@@ -550,7 +546,7 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center"
                                         style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${showBrush ? "brushing" : ""}`}>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${showBrush ? "brushing" : ""}` }>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -564,6 +560,7 @@ export default function StudentPet() {
                                                         src={accessory.imageKey}
                                                         alt={accessory.name}
                                                         className="pet-accessory"
+                                                        style={animationOffsets?.accessories?.[accessory?.name]}
                                                     />
                                                 )}
                                             </div>
@@ -575,7 +572,7 @@ export default function StudentPet() {
                                         src={feedEffect} 
                                         alt="Food" 
                                         className="pet-food-anim" 
-                                        style={pet.animationOffsets?.feed}
+                                        style={animationOffsets?.feed}
                                     />
                                 )}
                                 {showBall && (
@@ -583,7 +580,7 @@ export default function StudentPet() {
                                         src="/assets/effects/BallOfSlime.png"
                                         alt="Ball"
                                         className="pet-ball-anim"
-                                        style={pet.animationOffsets?.ball}
+                                        style={animationOffsets?.ball}
                                     />
                                 )}
                                 {showBrush && (
@@ -591,7 +588,7 @@ export default function StudentPet() {
                                         src="/assets/effects/HairBrush.png"
                                         alt="Brush"
                                         className="pet-brush-anim"
-                                        style={pet.animationOffsets?.brush}
+                                        style={animationOffsets?.brush}
                                     />
                                 )}
                                 {showLevelUp && (

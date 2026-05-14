@@ -4,9 +4,12 @@ const PET_TYPES = {
         species: "wolfy",
         isStarter: true,
         animationOffsets: {
-            feed:  { bottom: "50px", left: "35%" },
-            brush: { bottom: "60px", right: "25%" },
-            ball:  { bottom: "80px", left: "25%" },
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "45%" },
+            ball:  { bottom: "100px", left: "25%" },
+            accessories: {
+                "Bow": { top: "90px", width: "50px", left: "50%" },
+            },
         },
     },
     pengu: {
@@ -14,9 +17,12 @@ const PET_TYPES = {
         species: "pengu",
         isStarter: true,
         animationOffsets: {
-            feed:  { bottom: "50px", left: "35%" },
-            brush: { bottom: "60px", right: "25%" },
-            ball:  { bottom: "80px", left: "25%" },
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "41%" },
+            ball:  { bottom: "145px", left: "25%" },
+            accessories: {
+                "Bow": { top: "87px", width: "50px", left: "48%" },
+            },
         },
     },
     snazake: {
@@ -24,9 +30,12 @@ const PET_TYPES = {
         species: "snazake",
         isStarter: true,
         animationOffsets: {
-            feed:  { bottom: "50px", left: "35%" },
-            brush: { bottom: "60px", right: "25%" },
-            ball:  { bottom: "80px", left: "25%" },
+            feed:  { bottom: "80px", left: "22%" },
+            brush: { bottom: "310px", right: "42%" },
+            ball:  { bottom: "90px", left: "25%" },
+            accessories: {
+                "Bow": { top: "35px", width: "50px", left: "35%" },
+            },
         },
     },
 };
