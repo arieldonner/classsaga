@@ -17,10 +17,10 @@ export default function Navbar() {
         : "/login";
 
     return (
-        <nav className="navbar navbar-light px-3">
+        <nav className="navbar navbar-light px-3 sticky-top">
             <div className="d-flex align-items-center gap-3">
                 <Link className="navbar-brand fw-bold mb-0" to={homeLink} style={{ fontFamily: "'Philosopher', serif", fontSize: "1.4rem" }}>
-                    EduSaga
+                    ClassSaga
                 </Link>
 
                 {user?.role === "student" && (

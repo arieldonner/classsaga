@@ -42,7 +42,7 @@ export default function Signup() {
         <div className="card shadow p-4" style={{ width: 420 }}>
             <div className="text-center mb-4">
                 <h2 style={{ color: "var(--color-text)", fontFamily: "'Philosopher', serif", letterSpacing: "1px" }}>
-                    EduSaga
+                    ClassSaga
                 </h2>
                 <p className="text-muted mb-0">Create your account</p>
             </div>

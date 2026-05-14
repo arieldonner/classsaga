@@ -22,11 +22,14 @@ export default function StudentPet() {
     const [statChanges, setStatChanges] = useState({});
     const [ownedPets, setOwnedPets] = useState([]);
     const [feedEffect, setFeedEffect] = useState(null);
+    const [brushEffect, setBrushEffect] = useState(null);
     const [showBall, setShowBall] = useState(false);
+    const [bookEffect, setBookEffect] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
+    const [animationOffsets, setAnimationOffsets] = useState({});
 
     const navigate = useNavigate();
 
@@ -41,18 +44,12 @@ export default function StudentPet() {
         accessory: null,
     });
 
-    // Temporary use of imageKeys and css for background/accessories
-    const backgroundStyles = {
-    forest: { background: "linear-gradient(135deg, #2e7d32, #81c784)" },
-    beach: { background: "linear-gradient(135deg, #0288d1, #b3e5fc)" },
-    night: { background: "linear-gradient(135deg, #263238, #546e7a)" },
-    };
-
     const bgKey = equipment.background?.shopItem?.imageKey;
 
-    const petSceneStyle = backgroundStyles[bgKey] || {
-        background: "#f8f9fa",
-    };
+    const petSceneStyle = bgKey
+        ? { backgroundImage: `url(${bgKey})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
+        : { background: "var(--color-panel)" };
+
 
     const accessory = equipment.accessory?.shopItem;
 
@@ -113,11 +110,11 @@ export default function StudentPet() {
         );
     };
 
-    useEffect(() => {
-        const fetchPet = async () => {
+    const fetchPet = async () => {
             try {
                 const res = await api.get("/api/pets/my-pet");
                 setPet(res.data);
+                setAnimationOffsets(res.data.animationOffsets || {});
             } catch (err) {
                 if (err.response?.status === 404) {
                     navigate("/student/choose-starter");
@@ -127,8 +124,9 @@ export default function StudentPet() {
             } finally {
                 setLoading(false);
             }
-        };
+    };
 
+    useEffect(() => {
         fetchPet();
         fetchInventory();
         fetchOwnedPets();
@@ -199,13 +197,17 @@ export default function StudentPet() {
 
             const hungerIncrease = res.data.pet.hunger - previousHunger;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Fed ${res.data.pet.name} (Free) • Hunger +${hungerIncrease}`
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ hunger: hungerIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ hunger: hungerIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -246,13 +248,17 @@ export default function StudentPet() {
 
             const happinessIncrease = res.data.pet.happiness - previousHappiness;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Played with ${res.data.pet.name} (Free) • Happiness +${happinessIncrease}`
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ happiness: happinessIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ happiness: happinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -293,13 +299,17 @@ export default function StudentPet() {
 
             const cleanlinessIncrease = res.data.pet.cleanliness - previousCleanliness;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Brushed ${res.data.pet.name} (Free) • Cleanliness +${cleanlinessIncrease}`
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ cleanliness: cleanlinessIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ cleanliness: cleanlinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -309,10 +319,12 @@ export default function StudentPet() {
                 );
             }
 
-            setReaction("react-brush");
+            setBrushEffect("/assets/effects/HairBrush.png");
             setTimeout(() => {
-                setReaction("");
-            }, 400);
+                setBrushEffect(null);
+                setReaction("react-brush");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
@@ -339,6 +351,12 @@ export default function StudentPet() {
                 } else if (item.animationType === "play") {
                     setShowBall(true);
                     setTimeout(() => setShowBall(false), 2500);
+                } else if (item.animationType === "brush") {
+                    setBrushEffect(item.imageKey);
+                    setTimeout(() => setBrushEffect(null), 2500);
+                } else if (item.animationType === "book") {
+                    setBookEffect(item.imageKey);
+                    setTimeout(() => setBookEffect(null), 2500);
                 }
             }, 100);
             await fetchInventory();
@@ -430,7 +448,7 @@ export default function StudentPet() {
         try {
             const res = await api.patch(`/api/pets/${petId}/activate`);
 
-            setPet(res.data.pet);
+            await fetchPet();
             await fetchOwnedPets();
             await fetchEquipment();
 
@@ -535,7 +553,7 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center"
                                         style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""}`}>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -549,6 +567,7 @@ export default function StudentPet() {
                                                         src={accessory.imageKey}
                                                         alt={accessory.name}
                                                         className="pet-accessory"
+                                                        style={animationOffsets?.accessories?.[accessory?.name]}
                                                     />
                                                 )}
                                             </div>
@@ -560,6 +579,7 @@ export default function StudentPet() {
                                         src={feedEffect} 
                                         alt="Food" 
                                         className="pet-food-anim" 
+                                        style={animationOffsets?.feed}
                                     />
                                 )}
                                 {showBall && (
@@ -567,6 +587,23 @@ export default function StudentPet() {
                                         src="/assets/effects/BallOfSlime.png"
                                         alt="Ball"
                                         className="pet-ball-anim"
+                                        style={animationOffsets?.ball}
+                                    />
+                                )}
+                                {brushEffect && (
+                                    <img
+                                        src={brushEffect}
+                                        alt="Brush"
+                                        className="pet-brush-anim"
+                                        style={animationOffsets?.brush}
+                                    />
+                                )}
+                                {bookEffect && (
+                                    <img
+                                        src={bookEffect}
+                                        alt="Book"
+                                        className="pet-book-anim"
+                                        style={animationOffsets?.book}
                                     />
                                 )}
                                 {showLevelUp && (
@@ -656,7 +693,7 @@ export default function StudentPet() {
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold">
                                         XP ({pet.experience} / 100)
-                                        {statChanges.experience && (
+                                        {statChanges.experience > 0 && (
                                             <span className="text-success ms-2">+{statChanges.experience}</span>
                                         )}
                                     </label>
