@@ -225,3 +225,29 @@
   z-index: 20;
   white-space: nowrap;
 }
+
+/* Brush */
+@keyframes brushStroke {
+  0%   { transform: translateX(0) rotate(-20deg);   opacity: 1; }
+  20%  { transform: translateX(-20px) rotate(-20deg); opacity: 1; }
+  40%  { transform: translateX(10px) rotate(-20deg);  opacity: 1; }
+  60%  { transform: translateX(-15px) rotate(-20deg); opacity: 1; }
+  80%  { transform: translateX(5px) rotate(-20deg);   opacity: 0.7; }
+  100% { transform: translateX(0) rotate(-20deg);   opacity: 0; }
+}
+
+.pet-brush-anim {
+  position: absolute;
+  bottom: 280px;
+  right: 45%;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: brushStroke 2.5s ease-in-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.pet-container.brushing .pet-sprite {
+  animation: reactBrush 0.4s ease-in-out infinite;
+}

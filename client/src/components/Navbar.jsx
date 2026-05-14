@@ -20,7 +20,7 @@ export default function Navbar() {
         <nav className="navbar navbar-light px-3">
             <div className="d-flex align-items-center gap-3">
                 <Link className="navbar-brand fw-bold mb-0" to={homeLink} style={{ fontFamily: "'Philosopher', serif", fontSize: "1.4rem" }}>
-                    EduSaga
+                    ClassSaga
                 </Link>
 
                 {user?.role === "student" && (

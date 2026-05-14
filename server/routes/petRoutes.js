@@ -70,7 +70,12 @@ router.get("/my-pet", protect, async (req, res) => {
             await pet.save();
         }
 
-        res.json(pet);
+        const petType = PET_TYPES[pet.species];
+
+        res.json({
+            ...pet.toObject(),
+            animationOffsets: petType?.animationOffsets || {},
+        });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch pet." });
     }

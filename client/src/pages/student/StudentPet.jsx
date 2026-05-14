@@ -27,6 +27,7 @@ export default function StudentPet() {
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
+    const [showBrush, setShowBrush] = useState(false);
 
     const navigate = useNavigate();
 
@@ -199,13 +200,17 @@ export default function StudentPet() {
 
             const hungerIncrease = res.data.pet.hunger - previousHunger;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Fed ${res.data.pet.name} (Free) • Hunger +${hungerIncrease}`
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ hunger: hungerIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ hunger: hungerIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -246,13 +251,17 @@ export default function StudentPet() {
 
             const happinessIncrease = res.data.pet.happiness - previousHappiness;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Played with ${res.data.pet.name} (Free) • Happiness +${happinessIncrease}`
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ happiness: happinessIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ happiness: happinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -293,13 +302,17 @@ export default function StudentPet() {
 
             const cleanlinessIncrease = res.data.pet.cleanliness - previousCleanliness;
 
+            const xpGain = res.data.pet.level > previousLevel
+                ? (100 - previousExperience) + res.data.pet.experience
+                : res.data.pet.experience - previousExperience;
+
             const actionMessage =
                 res.data.actionType === "free"
                     ? `Brushed ${res.data.pet.name} (Free) • Cleanliness +${cleanlinessIncrease}`
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
             addMessage(actionMessage);
-            showStatChanges({ cleanliness: cleanlinessIncrease, experience: res.data.pet.experience - previousExperience });
+            showStatChanges({ cleanliness: cleanlinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
@@ -309,10 +322,12 @@ export default function StudentPet() {
                 );
             }
 
-            setReaction("react-brush");
+            setShowBrush(true);
             setTimeout(() => {
-                setReaction("");
-            }, 400);
+                setShowBrush(false);
+                setReaction("react-brush");
+                setTimeout(() => setReaction(""), 800);
+            }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
         }
@@ -535,7 +550,7 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center"
                                         style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""}`}>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${showBrush ? "brushing" : ""}`}>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -560,6 +575,7 @@ export default function StudentPet() {
                                         src={feedEffect} 
                                         alt="Food" 
                                         className="pet-food-anim" 
+                                        style={pet.animationOffsets?.feed}
                                     />
                                 )}
                                 {showBall && (
@@ -567,6 +583,15 @@ export default function StudentPet() {
                                         src="/assets/effects/BallOfSlime.png"
                                         alt="Ball"
                                         className="pet-ball-anim"
+                                        style={pet.animationOffsets?.ball}
+                                    />
+                                )}
+                                {showBrush && (
+                                    <img
+                                        src="/assets/effects/HairBrush.png"
+                                        alt="Brush"
+                                        className="pet-brush-anim"
+                                        style={pet.animationOffsets?.brush}
                                     />
                                 )}
                                 {showLevelUp && (
@@ -656,7 +681,7 @@ export default function StudentPet() {
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold">
                                         XP ({pet.experience} / 100)
-                                        {statChanges.experience && (
+                                        {statChanges.experience > 0 && (
                                             <span className="text-success ms-2">+{statChanges.experience}</span>
                                         )}
                                     </label>

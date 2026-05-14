@@ -42,7 +42,7 @@ export default function Login() {
         <div className="card p-4 shadow" style={{ width: "100%", maxWidth: "400px" }}>
         <div className="text-center mb-4">
             <h2 style={{ color: "var(--color-text)", fontFamily: "'Philosopher', serif", letterSpacing: "1px" }}>
-                EduSaga
+                ClassSaga
             </h2>
 
             <p className="text-muted mb-0">Sign in to continue</p>
