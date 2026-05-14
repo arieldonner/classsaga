@@ -22,12 +22,13 @@ export default function StudentPet() {
     const [statChanges, setStatChanges] = useState({});
     const [ownedPets, setOwnedPets] = useState([]);
     const [feedEffect, setFeedEffect] = useState(null);
+    const [brushEffect, setBrushEffect] = useState(null);
     const [showBall, setShowBall] = useState(false);
+    const [bookEffect, setBookEffect] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
-    const [showBrush, setShowBrush] = useState(false);
     const [animationOffsets, setAnimationOffsets] = useState({});
 
     const navigate = useNavigate();
@@ -318,9 +319,9 @@ export default function StudentPet() {
                 );
             }
 
-            setShowBrush(true);
+            setBrushEffect("/assets/effects/HairBrush.png");
             setTimeout(() => {
-                setShowBrush(false);
+                setBrushEffect(null);
                 setReaction("react-brush");
                 setTimeout(() => setReaction(""), 800);
             }, 2500);
@@ -350,6 +351,12 @@ export default function StudentPet() {
                 } else if (item.animationType === "play") {
                     setShowBall(true);
                     setTimeout(() => setShowBall(false), 2500);
+                } else if (item.animationType === "brush") {
+                    setBrushEffect(item.imageKey);
+                    setTimeout(() => setBrushEffect(null), 2500);
+                } else if (item.animationType === "book") {
+                    setBookEffect(item.imageKey);
+                    setTimeout(() => setBookEffect(null), 2500);
                 }
             }, 100);
             await fetchInventory();
@@ -546,7 +553,7 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center"
                                         style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${showBrush ? "brushing" : ""}` }>
+                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
                                             <div className="pet-sprite pet-idle">
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
@@ -583,12 +590,20 @@ export default function StudentPet() {
                                         style={animationOffsets?.ball}
                                     />
                                 )}
-                                {showBrush && (
+                                {brushEffect && (
                                     <img
-                                        src="/assets/effects/HairBrush.png"
+                                        src={brushEffect}
                                         alt="Brush"
                                         className="pet-brush-anim"
                                         style={animationOffsets?.brush}
+                                    />
+                                )}
+                                {bookEffect && (
+                                    <img
+                                        src={bookEffect}
+                                        alt="Book"
+                                        className="pet-book-anim"
+                                        style={animationOffsets?.book}
                                     />
                                 )}
                                 {showLevelUp && (

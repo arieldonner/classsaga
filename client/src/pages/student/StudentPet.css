@@ -251,3 +251,24 @@
 .pet-container.brushing .pet-sprite {
   animation: reactBrush 0.4s ease-in-out infinite;
 }
+
+/* Book animation */
+@keyframes bookFloat {
+  0%   { transform: translateX(-50%) translateY(0)    rotate(-5deg); opacity: 1; }
+  25%  { transform: translateX(-50%) translateY(-15px) rotate(3deg);  opacity: 1; }
+  50%  { transform: translateX(-50%) translateY(-8px)  rotate(-5deg); opacity: 1; }
+  75%  { transform: translateX(-50%) translateY(-18px) rotate(3deg);  opacity: 0.8; }
+  100% { transform: translateX(-50%) translateY(-25px) rotate(0deg);  opacity: 0; }
+}
+
+.pet-book-anim {
+  position: absolute;
+  bottom: 120px;
+  left: 25%;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: bookFloat 2.5s ease-in-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
