@@ -59,3 +59,12 @@ Students use ClassSaga to care for and customize their virtual pet using points 
 4. Click on an equipped item slot to unequip it
 5. To switch between owned pets, go to the **Pets** tab and click **Switch**
 6. Pets can be renamed by clicking the pencil icon next to their name when they are active
+
+### Battling Monsters
+1. Navigate to **Battle** from the Student Dashboard or navbar
+2. Each day you get one free battle attempt against the current monster
+3. Click **Attack** to start the battle. it plays out turn by turn automatically
+4. Your pet's strength, speed, and defense stats determine battle performance
+5. Monster HP persists between days. It may take multiple attempts to defeat a monster
+6. Defeating a monster rewards your pet with XP and drops a random item into your inventory
+7. Each defeated monster is replaced by a stronger one to match your pet's growing stats

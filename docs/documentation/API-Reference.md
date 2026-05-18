@@ -75,3 +75,12 @@ All endpoints are prefixed with `http://localhost:5050`. Protected routes requir
 | PUT | `/api/classrooms/:id` | Teacher | Update classroom details |
 | PATCH | `/api/classrooms/:id/archive` | Teacher | Archive a classroom |
 | DELETE | `/api/classrooms/:id/students/:studentId` | Teacher | Remove a student from a classroom |
+
+---
+
+## Battle — `/api/battle`
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| GET | `/api/battle/status` | Student | Get current monster, monster HP, and whether daily battle has been used |
+| POST | `/api/battle/attack` | Student | Execute the daily battle, returns round-by-round results and rewards |
