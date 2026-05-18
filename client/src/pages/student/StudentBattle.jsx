@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentBattle.css";
@@ -14,6 +14,7 @@ export default function StudentBattle() {
     const [petAttacking, setPetAttacking] = useState(false);
     const [monsterAttacking, setMonsterAttacking] = useState(false);
     const [error, setError] = useState("");
+    const logRef = useRef(null);
 
     const fetchStatus = async () => {
         try {
@@ -33,6 +34,12 @@ export default function StudentBattle() {
     useEffect(() => {
         fetchStatus();
     }, []);
+
+    useEffect(() => {
+        if (logRef.current) {
+            logRef.current.scrollTop = logRef.current.scrollHeight;
+        }
+    }, [displayedLog]);
 
     const handleAttack = async () => {
         setBattling(true);
@@ -55,6 +62,10 @@ export default function StudentBattle() {
                     setMonsterAttacking(false);
                     fetchStatus();
                     setBattling(false);
+                    setDisplayedLog(prev => [
+                        ...prev,
+                        data.petWon ? "Victory! Monster defeated!" : "Defeated! Try again tomorrow."
+                    ]);
                     return;
                 }
                 const round = data.rounds[i];
@@ -204,29 +215,25 @@ export default function StudentBattle() {
 
                     {/* Right - Battle Log col-md-4 */}
                     <div className="col-md-4">
-                        <div className="card shadow-sm p-4 h-100">
-                            <h5 className="mb-2">Battle Log</h5>
-                            {!battleResult && !animatingRound ? (
-                                <p className="text-muted mb-0">
-                                    {battleStatus.dailyBattleUsed
-                                        ? "You have already battled today. Come back tomorrow!"
-                                        : "Press Attack to start the battle!"}
-                                </p>
-                            ) : (
-                                <>
-                                    {battleResult && (
-                                        <div className={`alert ${battleResult.petWon ? "alert-success" : "alert-danger"} mb-3`}>
-                                            {battleResult.petWon ? "Victory! Monster defeated!" : "Defeated! Try again tomorrow."}
-                                        </div>
-                                    )}
-                                    <ul className="list-unstyled mb-0" style={{ maxHeight: "220px", overflowY: "auto" }}>
-                                        {displayedLog.map((line, i) => (
-                                            <li key={i} className="mb-1 small">{line}</li>
-                                        ))}
-                                    </ul>
-                                </>
-                            )}
-                        </div>
+                        <div className="card shadow-sm p-4 h-100 d-flex flex-column" style={{ overflow: "hidden" }}>
+    <h5 className="mb-2">Battle Log</h5>
+    {!battleResult && !animatingRound ? (
+        <p className="text-muted mb-0">
+            {battleStatus.dailyBattleUsed
+                ? "You have already battled today. Come back tomorrow!"
+                : "Press Attack to start the battle!"}
+        </p>
+    ) : (
+        <div style={{ flex: 1, position: "relative" }}>
+            <ul ref={logRef} className="list-unstyled mb-0" style={{ position: "absolute", inset: 0, overflowY: "auto" }}>
+                {displayedLog.map((line, i) => (
+                    <li key={i} className="mb-1 small">{line}</li>
+                ))}
+            </ul>
+        </div>
+    )}
+</div>
+
                     </div>
                 </div>
             )}

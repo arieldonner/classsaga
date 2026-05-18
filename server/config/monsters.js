@@ -6,7 +6,7 @@ const MONSTER_IMAGES = [
 const getMonster = (index) => {
     return {
         name: `Monster ${index + 1}`,
-        maxHP: 50 + (index * 25),
+        maxHP: 25 + (index * 15),
         attack: 5 + (index * 2),
         defense: 2 + Math.floor(index * 1.5),
         imageKey: MONSTER_IMAGES[index % 2],

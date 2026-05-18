@@ -5,16 +5,16 @@ const BattleState = require("../models/BattleState");
 const Pet = require("../models/Pet");
 const { getMonster } = require("../config/monsters");
 
-const PET_BATTLE_HP = 100;
+const PET_BATTLE_HP = 50;
 
 const calculatePetDamage = (pet, monster) => {
-    const base = Math.max(1, pet.strength - monster.defense);
+    const base = Math.max(1, pet.strength - monster.defense) * 2;
     const lucky = Math.random() < pet.speed / 100;
     return lucky ? base * 2 : base;
 };
 
 const calculateMonsterDamage = (monster, pet) => {
-    return Math.max(1, monster.attack - pet.defense);
+    return Math.max(1, monster.attack - pet.defense) * 2;
 };
 
 router.get("/status", protect, async (req, res) => {
@@ -103,7 +103,7 @@ router.post("/attack", protect, async (req, res) => {
 
             // Pet attacks
             const petDamage = calculatePetDamage(pet, monster);
-            const lucky = petDamage > Math.max(1, pet.strength - monster.defense);
+            const lucky = petDamage > Math.max(1, pet.strength - monster.defense) * 2;
             monsterHP = Math.max(0, monsterHP - petDamage);
             lines.push(
                 lucky
