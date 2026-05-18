@@ -426,6 +426,7 @@ export default function TeacherClassroomDetails() {
                                 style={{ width: "1.3em", height: "1.3em", cursor: "pointer" }}
                                 checked={selectedStudents.includes(student._id)}
                                 onChange={() => handleStudentToggle(student._id)}
+                                onClick={(e) => e.stopPropagation()}
                             />
                         </div>
                     </div>
