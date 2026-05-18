@@ -36,6 +36,10 @@ export default function Navbar() {
                         <Link className="nav-link" to="/student/shop">
                             Shop
                         </Link>
+
+                        <Link className="nav-link" to="/student/battle">
+                            Battle
+                        </Link>
                     </div>
                 )}
 

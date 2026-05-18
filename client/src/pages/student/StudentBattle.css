@@ -1,0 +1,23 @@
+@keyframes battleBreathe {
+  0%, 100% { transform: scaleY(1); }
+  50%       { transform: scaleY(0.96); }
+}
+
+.battle-breathe {
+  animation: battleBreathe 2.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes petTackle {
+    0%, 100% { transform: translateX(0); }
+    50%       { transform: translateX(40px); }
+}
+
+@keyframes monsterHit {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-8px); }
+    75%       { transform: translateX(8px); }
+}
+
+.pet-tackle { animation: petTackle 0.35s ease-in-out; }
+.monster-hit { animation: monsterHit 0.35s ease-in-out; }

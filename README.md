@@ -27,15 +27,19 @@ My project, ClassSaga, is a student-centered, gamified approach to an incentive 
   - Students are able to view their earned points at all times
   - Points can be spent on premium care for the pet (to increase stats) 
   - Students can also purchase cosmetics for customization, more pets, and special care items in the student shop
+- Battle System
+  - Once a day, student can battle a monster with their active pet
+  - Defeating a monster drops xp and a random item drop
+  - Each new monster gets a little stronger to scale with pet levels
+
 
 ## Out of Scope (Future Direction)
 - More pet, cosmetic, and care options
 - Evolution of pets
-- Pet battles/competitions (versus NPCs, group battles, etc.)
 - Achievements rewarded for different milestones and unlock different rewards
 - API connection to Canvas or Google classroom 
 - Sign up/in with Google and other options
-- Multiplayer (whole class) events
+- Multiplayer (whole class) events (group battles, competitions, leaderboards, etc.)
 - Built-in academic content (math activities to get more points)
   - AI-driven features
 
