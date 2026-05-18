@@ -56,16 +56,19 @@ export default function StudentBattle() {
             let i = 0;
             const stepRound = () => {
                 if (i >= data.rounds.length) {
+                    const endLines = [data.petWon ? "Victory! Monster defeated!" : "Defeated! Try again tomorrow."];
+                    if (data.petWon && data.reward) {
+                        endLines.push(`+${data.reward.xp} XP earned!`);
+                        if (data.reward.leveledUp) endLines.push("Your pet leveled up!");
+                        endLines.push(`Item dropped: ${data.reward.itemName}!`);
+                    }
+                    setDisplayedLog(prev => [...prev, ...endLines]);
                     setBattleResult(data);
                     setAnimatingRound(null);
                     setPetAttacking(false);
                     setMonsterAttacking(false);
                     fetchStatus();
                     setBattling(false);
-                    setDisplayedLog(prev => [
-                        ...prev,
-                        data.petWon ? "Victory! Monster defeated!" : "Defeated! Try again tomorrow."
-                    ]);
                     return;
                 }
                 const round = data.rounds[i];
@@ -133,14 +136,16 @@ export default function StudentBattle() {
                                             }}
                                         />
                                     </div>
-                                    <div className={petAttacking ? "pet-tackle" : ""}>
-                                        <div style={{ transform: "scaleX(-1)", display: "inline-block" }}>
-                                            <img
-                                                src={`/assets/pets/${pet.species}.png`}
-                                                alt={pet.name}
-                                                className="battle-breathe"
-                                                style={{ maxHeight: "160px", objectFit: "contain" }}
-                                            />
+                                    <div style={{ textAlign: "center" }}>
+                                        <div className={petAttacking ? "pet-tackle" : ""}>
+                                            <div style={{ transform: "scaleX(-1)", display: "inline-block" }}>
+                                                <img
+                                                    src={`/assets/pets/${pet.species}.png`}
+                                                    alt={pet.name}
+                                                    className="battle-breathe"
+                                                    style={{ maxHeight: "160px", objectFit: "contain" }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -157,13 +162,15 @@ export default function StudentBattle() {
                                             style={{ width: `${hpPercent(animatingRound ? animatingRound.monsterHP : battleResult ? battleResult.finalMonsterHP : battleStatus.monster.currentHP, battleStatus.monster.maxHP)}%` }}
                                         />
                                     </div>
-                                    <div className={monsterAttacking ? "monster-hit" : ""}>
-                                        <img
-                                            src={battleStatus.monster.imageKey}
-                                            alt={battleStatus.monster.name}
-                                            className="battle-breathe"
-                                            style={{ maxHeight: "160px", objectFit: "contain" }}
-                                        />
+                                    <div style={{ textAlign: "center" }}>
+                                        <div className={monsterAttacking ? "monster-hit" : ""}>
+                                            <img
+                                                src={battleResult?.petWon ? "/assets/monsters/lootbox_closed.png" : battleStatus.monster.imageKey}
+                                                alt={battleStatus.monster.name}
+                                                className={battleResult?.petWon ? "" : "battle-breathe"}
+                                                style={{ maxHeight: "160px", objectFit: "contain" }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

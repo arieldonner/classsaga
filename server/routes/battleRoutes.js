@@ -4,6 +4,8 @@ const { protect } = require("../middleware/authMiddleware");
 const BattleState = require("../models/BattleState");
 const Pet = require("../models/Pet");
 const { getMonster } = require("../config/monsters");
+const InventoryItem = require("../models/InventoryItem");
+const ShopItem = require("../models/ShopItem");
 
 const PET_BATTLE_HP = 50;
 
@@ -97,6 +99,7 @@ router.post("/attack", protect, async (req, res) => {
         let monsterHP = battleState.currentMonsterHP;
         const rounds = [];
         let round = 1;
+        let reward = null;
 
         while (petHP > 0 && monsterHP > 0) {
             const lines = [];
@@ -133,6 +136,47 @@ router.post("/attack", protect, async (req, res) => {
 
         if (petWon) {
             battleState.monsterIndex += 1;
+
+            // XP reward
+            const prevLevel = pet.level;
+            pet.experience += 20;
+            while (pet.experience >= 100) {
+                pet.experience -= 100;
+                pet.level += 1;
+                pet.strength += 1;
+                pet.speed += 1;
+                pet.defense += 1;
+            }
+            await pet.save();
+
+            // Item drop - 70% consumable, 30% cosmetic
+            const itemType = Math.random() < 0.7 ? "consumable" : "cosmetic";
+
+            let droppableItems;
+            if (itemType === "cosmetic") {
+                const owned = await InventoryItem.find({ student: req.user._id }).select("shopItem");
+                const ownedIds = owned.map(i => i.shopItem.toString());
+                droppableItems = await ShopItem.find({ itemType: "cosmetic", isActive: true, _id: { $nin: ownedIds } });
+                // Fall back to consumable if student owns all cosmetics
+                if (droppableItems.length === 0) {
+                    droppableItems = await ShopItem.find({ itemType: "consumable", isActive: true });
+                }
+            } else {
+                droppableItems = await ShopItem.find({ itemType: "consumable", isActive: true });
+            }
+
+            const droppedItem = droppableItems[Math.floor(Math.random() * droppableItems.length)];
+            await InventoryItem.findOneAndUpdate(
+                { student: req.user._id, shopItem: droppedItem._id },
+                { $inc: { quantity: 1 } },
+                { upsert: true, new: true }
+            );
+
+            reward = {
+                xp: 20,
+                leveledUp: pet.level > prevLevel,
+                itemName: droppedItem.name,
+            };
         }
 
         await battleState.save();
@@ -140,6 +184,7 @@ router.post("/attack", protect, async (req, res) => {
         res.json({
             petWon,
             rounds,
+            reward,
             finalMonsterHP: petWon ? 0 : monsterHP,
             finalPetHP: petWon ? petHP : 0,
             petBattleHP: PET_BATTLE_HP,
