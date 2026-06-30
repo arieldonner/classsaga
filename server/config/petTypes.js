@@ -41,6 +41,62 @@ const PET_TYPES = {
             },
         },
     },
+    slimepet: {
+        name: "Slime",
+        species: "slimepet",
+        isStarter: false,
+        animationOffsets: {
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "45%" },
+            ball:  { bottom: "100px", left: "25%" },
+            book:  { bottom: "100px", left: "25%" },
+            accessories: {
+                "Bow": { top: "90px", width: "50px", left: "50%" },
+            },
+        },
+    },
+    prickling: {
+        name: "Prickling",
+        species: "prickling",
+        isStarter: false,
+        animationOffsets: {
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "45%" },
+            ball:  { bottom: "100px", left: "25%" },
+            book:  { bottom: "100px", left: "25%" },
+            accessories: {
+                "Bow": { top: "90px", width: "50px", left: "50%" },
+            },
+        },
+    },
+    dustbunny: {
+        name: "Dust Bunny",
+        species: "dustbunny",
+        isStarter: false,
+        animationOffsets: {
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "45%" },
+            ball:  { bottom: "100px", left: "25%" },
+            book:  { bottom: "100px", left: "25%" },
+            accessories: {
+                "Bow": { top: "90px", width: "50px", left: "50%" },
+            },
+        },
+    },
+    babydragon: {
+        name: "Baby Dragon",
+        species: "babydragon",
+        isStarter: false,
+        animationOffsets: {
+            feed:  { bottom: "90px", left: "32%" },
+            brush: { bottom: "270px", right: "45%" },
+            ball:  { bottom: "100px", left: "25%" },
+            book:  { bottom: "100px", left: "25%" },
+            accessories: {
+                "Bow": { top: "90px", width: "50px", left: "50%" },
+            },
+        },
+    },
 };
 
 module.exports = PET_TYPES;
