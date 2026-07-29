@@ -23,6 +23,10 @@ const dailyCareLogSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        loginBonusClaimed: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );

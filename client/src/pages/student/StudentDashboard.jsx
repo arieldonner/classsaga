@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
 
 export default function StudentDashboard() {
@@ -14,7 +15,11 @@ export default function StudentDashboard() {
     const [pet, setPet] = useState(null);
     const [loadingPet, setLoadingPet] = useState(true);
 
+    const [loginBonus, setLoginBonus] = useState(null);
+
     const navigate = useNavigate();
+
+    const { updateUser } = useAuth();
 
     useEffect(() => {
         const fetchClassrooms = async () => {
@@ -31,8 +36,7 @@ export default function StudentDashboard() {
         fetchClassrooms();
     }, []);
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
+    const fetchTransactions = async () => {
         try {
             const res = await api.get("/api/points/my-transactions");
             setTransactions(res.data);
@@ -41,10 +45,12 @@ export default function StudentDashboard() {
         } finally {
             setLoadingTx(false);
         }
-        };
+    };
 
+    useEffect(() => {
         fetchTransactions();
     }, []);
+
 
     useEffect(() => {
         const fetchPet = async () => {
@@ -65,6 +71,23 @@ export default function StudentDashboard() {
         fetchPet();
     }, []);
 
+    useEffect(() => {
+        const claimLoginBonus = async () => {
+            try {
+                const res = await api.post("/api/points/daily-login");
+                if (res.data.claimed) {
+                    setLoginBonus({ points: res.data.pointsAwarded, message: res.data.message });
+                    updateUser({ points: res.data.studentPoints });
+                    await fetchTransactions();
+                }
+            } catch (err) {
+                console.error("Failed to claim daily login bonus");
+            }
+        };
+
+        claimLoginBonus();
+    }, []);
+
     const statColor = (value) => {
         if (value >= 60) return "#4a9e6b";
         if (value >= 30) return "#c8922a";
@@ -76,6 +99,17 @@ export default function StudentDashboard() {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>Student Dashboard</h2>
             </div>
+
+            {loginBonus && (
+                <div className="alert alert-success d-flex justify-content-between align-items-center">
+                    <span>+{loginBonus.points} points for logging in today! {loginBonus.message}</span>
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => setLoginBonus(null)}
+                    ></button>
+                </div>
+            )}
 
             <div className="row g-4 mb-4">
                 <div className="col-md-4">

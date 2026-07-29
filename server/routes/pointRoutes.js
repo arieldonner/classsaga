@@ -2,10 +2,71 @@ const express = require("express");
 const User = require("../models/User");
 const Classroom = require("../models/Classroom");
 const PointTransaction = require("../models/PointTransaction");
+const DailyCareLog = require("../models/DailyCareLog");
 const { protect } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
 
 const router = express.Router();
+
+const getTodayDateKey = () => {
+    return new Date().toISOString().split("T")[0];
+};
+
+const LOGIN_MESSAGES = [
+    "Great to see you today!",
+    "Ready for another day of adventure?",
+    "Your pet missed you!",
+    "Keep up the great work!",
+    "Every day counts — welcome back!",
+    "You're on a roll!",
+    "Let's make today a good one.",
+];
+
+// Daily login
+router.post("/daily-login", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can claim login bonuses." });
+        }
+
+        const dateKey = getTodayDateKey();
+
+        let log = await DailyCareLog.findOne({ student: req.user._id, dateKey });
+
+        if (!log) {
+            log = await DailyCareLog.create({ student: req.user._id, dateKey });
+        }
+
+        if (log.loginBonusClaimed) {
+            return res.json({ claimed: false, studentPoints: req.user.points });
+        }
+
+        const bonusAmount = 5;
+
+        req.user.points += bonusAmount;
+        await req.user.save();
+
+        log.loginBonusClaimed = true;
+        await log.save();
+
+        await PointTransaction.create({
+            student: req.user._id,
+            amount: bonusAmount,
+            reason: "Daily login bonus",
+            type: "login",
+        });
+
+        res.json({
+            claimed: true,
+            pointsAwarded: bonusAmount,
+            studentPoints: req.user.points,
+            message: LOGIN_MESSAGES[Math.floor(Math.random() * LOGIN_MESSAGES.length)],
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to claim daily login bonus." });
+    }
+});
+
 
 // Teacher awards points to one student in a classroom
 router.post("/award", protect, async (req, res) => {
