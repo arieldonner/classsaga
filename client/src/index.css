@@ -2,76 +2,27 @@ h1, h2, h3, h4, h5 {
     font-family: 'Philosopher', serif;
 }
 
-@keyframes petIdle {
-  0% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-  25% {
-    transform: translateY(-1px) rotate(-0.7deg) scale(1.005);
-  }
-  50% {
-    transform: translateY(0) rotate(0.4deg) scale(1);
-  }
-  75% {
-    transform: translateY(-1px) rotate(0.7deg) scale(1.005);
-  }
-  100% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
+@keyframes petBreathe {
+  0%, 100% { scale: 1 1; }
+  50%      { scale: 0.995 1.012; }   /* dial: 1.008 (barely) – 1.02 (pronounced) */
+}
+
+@keyframes petSway {
+  0%, 100% { rotate: -1deg; translate: 0 0; }
+  50%      { rotate:  1deg; translate: 0 -3px; }
 }
 
 .pet-idle {
-  animation: petIdle 3.2s ease-in-out infinite;
+  animation:
+    petBreathe 2.7s ease-in-out infinite,
+    petSway    4.3s ease-in-out infinite;
   transform-origin: bottom center;
 }
+
 
 .pet-container {
   position: relative;
   display: inline-block;
-}
-
-@keyframes hopRight {
-  0% {
-    transform: translateX(0) translateY(0);
-  }
-  25% {
-    transform: translateX(8px) translateY(-6px);
-  }
-  50% {
-    transform: translateX(16px) translateY(0);
-  }
-  75% {
-    transform: translateX(8px) translateY(-4px);
-  }
-  100% {
-    transform: translateX(0) translateY(0);
-  }
-}
-
-@keyframes hopLeft {
-  0% {
-    transform: translateX(0) translateY(0);
-  }
-  25% {
-    transform: translateX(-8px) translateY(-6px);
-  }
-  50% {
-    transform: translateX(-16px) translateY(0);
-  }
-  75% {
-    transform: translateX(-8px) translateY(-4px);
-  }
-  100% {
-    transform: translateX(0) translateY(0);
-  }
-}
-
-.hop-right {
-  animation: hopRight 0.7s ease-in-out;
-}
-
-.hop-left {
-  animation: hopLeft 0.7s ease-in-out;
 }
 
 @keyframes reactFeed {
@@ -142,6 +93,55 @@ h1, h2, h3, h4, h5 {
   animation: reactBrush 0.4s ease;
   transform-origin: bottom center;
 }
+
+.pet-roamer {
+  position: relative;
+  transition: translate 1.1s ease-in-out, scale 120ms ease-out;   /* fallback */
+  transition:
+    translate var(--travel-dur, 1.1s)
+      linear(0 0%, 0 7.5%, 0.5 40%, 0.5 57.5%, 1 90%, 1 100%),
+    scale 120ms ease-out;
+  will-change: translate, scale;
+}
+
+@keyframes travelHop {
+  0%, 100% { translate: 0 0;     scale: 1 1; }
+  15%      { translate: 0 0;     scale: 1.05 0.95; }   /* crouch */
+  45%      { translate: 0 -14px; scale: 0.96 1.04; }   /* airborne */
+  80%      { translate: 0 0;     scale: 1.06 0.94; }   /* land */
+}
+
+.pet-roamer.traveling .pet-container {
+  animation: travelHop 0.55s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-idle, .pet-roamer.traveling .pet-container { animation: none; }
+  .pet-roamer { transition: none; }
+}
+
+.pet-shadow {
+  position: absolute;
+  bottom: 15%; left: 50%;
+  translate: -50% 0;
+  width: 40%; height: 14px;
+  background: rgba(0, 0, 0, .22);
+  border-radius: 50%;
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+@keyframes shadowHop {
+  0%, 100% { scale: 1 1;    opacity: 1;   filter: blur(5px); }
+  45%      { scale: .85 .88; opacity: .55; filter: blur(9px); }
+}
+
+.pet-roamer.traveling .pet-shadow {
+  animation: shadowHop calc(var(--travel-dur, 1.1s) / 2) ease-in-out infinite;
+}
+
+
 
 :root {
   --color-parchment: #fdf6ec;

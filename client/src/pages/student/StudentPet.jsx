@@ -6,6 +6,14 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
 
+const withRoam = (offset, roamX) => {
+  if (!offset) return offset;
+  const o = { ...offset };
+  if (o.left)  o.left  = `calc(${o.left} + ${roamX}px)`;
+  if (o.right) o.right = `calc(${o.right} - ${roamX}px)`;
+  return o;
+};
+
 export default function StudentPet() {
     const [pet, setPet] = useState(null);
     const [error, setError] = useState("");
@@ -15,7 +23,10 @@ export default function StudentPet() {
     const { user, updateUser } = useAuth();
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const logRef = useRef(null);
-    const [hopDirection, setHopDirection] = useState("");
+    const [roamX, setRoamX] = useState(0);
+    const [facing, setFacing] = useState("right");
+    const [traveling, setTraveling] = useState(false);
+    const roamXRef = useRef(0);      // avoids a stale-closure read in the scheduler
     const [reaction, setReaction] = useState("");
     const [activeTab, setActiveTab] = useState("care");
     const [inventory, setInventory] = useState([]);
@@ -30,6 +41,13 @@ export default function StudentPet() {
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
     const [animationOffsets, setAnimationOffsets] = useState({});
+    const [artFacing, setArtFacing] = useState("left");
+    const [travelDur, setTravelDur] = useState(1.1);
+
+    const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
+    const flipped = (facing === "right") !== (artFacing === "right");
+
+    const ROAM_RANGE = 130;   // px each side of center — tune to your scene width
 
     const navigate = useNavigate();
 
@@ -115,6 +133,7 @@ export default function StudentPet() {
                 const res = await api.get("/api/pets/my-pet");
                 setPet(res.data);
                 setAnimationOffsets(res.data.animationOffsets || {});
+                setArtFacing(res.data.artFacing || "left");
             } catch (err) {
                 if (err.response?.status === 404) {
                     navigate("/student/choose-starter");
@@ -164,18 +183,35 @@ export default function StudentPet() {
     }, [messages]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (reaction || feedEffect) return;
-            const direction = Math.random() > 0.5 ? "hop-right" : "hop-left";
-            setHopDirection(direction);
+        if (busy) { setTraveling(false); return; }
+        let nextId, travelId;
 
-            setTimeout(() => {
-                setHopDirection("");
-            }, 600);
-        }, 9000);
+        const schedule = () => {
+            nextId = setTimeout(() => {
+            const target = Math.round((Math.random() * 2 - 1) * ROAM_RANGE);
+            const dist   = Math.abs(target - roamXRef.current);
+            const dur    = Math.min(1.1, Math.max(0.6, dist / 130));   // ~130px/s
 
-        return () => clearInterval(interval);
-    }, [reaction, feedEffect]);
+            setFacing(target > roamXRef.current ? "right" : "left");
+            roamXRef.current = target;
+            setRoamX(target);
+            setTravelDur(dur);
+
+            setTraveling(true);
+            travelId = setTimeout(() => setTraveling(false), dur * 1000);   // was hardcoded 1100
+
+
+            schedule();
+            }, 3000 + Math.random() * 4000);                            // 3–7s, aperiodic
+        };
+
+        schedule();
+        return () => { clearTimeout(nextId); clearTimeout(travelId); };
+        }, [busy]);
+
+    useEffect(() => {
+        if (busy) setFacing(artFacing);
+    }, [busy, artFacing]);
 
     const handleFeed = async () => {
         setActionError("");
@@ -553,23 +589,33 @@ export default function StudentPet() {
                                         className="border rounded d-flex align-items-center justify-content-center"
                                         style={{ height: "500px", ...petSceneStyle }}
                                     >
-                                        <div className={`pet-container ${hopDirection} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
-                                            <div className="pet-sprite pet-idle">
-                                                <img
-                                                    src={`/assets/pets/${pet.species}.png`}
-                                                    alt="Pet"
-                                                    className="img-fluid"
-                                                    style={{ maxHeight: "340px" }}
-                                                />
-
-                                                {accessory?.imageKey && (
+                                        <div
+                                            className={`pet-roamer ${traveling && !busy ? "traveling" : ""}`}
+                                            style={{
+                                                "--travel-dur": `${travelDur}s`,
+                                                translate: `${roamX}px 0`,
+                                                scale: flipped ? "-1 1" : "1 1",
+                                            }}
+                                        >
+                                            <div className="pet-shadow" style={animationOffsets?.shadow} />
+                                            <div className={`pet-container ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
+                                                <div className="pet-sprite pet-idle">
                                                     <img
-                                                        src={accessory.imageKey}
-                                                        alt={accessory.name}
-                                                        className="pet-accessory"
-                                                        style={animationOffsets?.accessories?.[accessory?.name]}
+                                                        src={`/assets/pets/${pet.species}.png`}
+                                                        alt="Pet"
+                                                        className="img-fluid"
+                                                        style={{ maxHeight: "340px" }}
                                                     />
-                                                )}
+
+                                                    {accessory?.imageKey && (
+                                                        <img
+                                                            src={accessory.imageKey}
+                                                            alt={accessory.name}
+                                                            className="pet-accessory"
+                                                            style={animationOffsets?.accessories?.[accessory?.name]}
+                                                        />
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -579,7 +625,7 @@ export default function StudentPet() {
                                         src={feedEffect} 
                                         alt="Food" 
                                         className="pet-food-anim" 
-                                        style={animationOffsets?.feed}
+                                        style={withRoam(animationOffsets?.feed,  roamX)}
                                     />
                                 )}
                                 {showBall && (
@@ -587,7 +633,7 @@ export default function StudentPet() {
                                         src="/assets/effects/BallOfSlime.png"
                                         alt="Ball"
                                         className="pet-ball-anim"
-                                        style={animationOffsets?.ball}
+                                        style={withRoam(animationOffsets?.ball,  roamX)}
                                     />
                                 )}
                                 {brushEffect && (
@@ -595,7 +641,7 @@ export default function StudentPet() {
                                         src={brushEffect}
                                         alt="Brush"
                                         className="pet-brush-anim"
-                                        style={animationOffsets?.brush}
+                                        style={withRoam(animationOffsets?.brush, roamX)}
                                     />
                                 )}
                                 {bookEffect && (
@@ -603,7 +649,7 @@ export default function StudentPet() {
                                         src={bookEffect}
                                         alt="Book"
                                         className="pet-book-anim"
-                                        style={animationOffsets?.book}
+                                        style={withRoam(animationOffsets?.book,  roamX)}
                                     />
                                 )}
                                 {showLevelUp && (
