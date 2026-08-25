@@ -59,7 +59,7 @@ const shopItemSchema = new mongoose.Schema(
         },
         petSpecies: {
             type: String,
-            enum: ["wolfy", "pengu", "snazake", "none"],
+            enum: ["wolfy", "pengu", "snazake", "slimepet", "prickling", "dustbunny", "babydragon", "none"],
             default: "none",
         },
         unlockLevel: {

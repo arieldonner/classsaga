@@ -75,6 +75,7 @@ router.get("/my-pet", protect, async (req, res) => {
         res.json({
             ...pet.toObject(),
             animationOffsets: petType?.animationOffsets || {},
+            artFacing: petType?.artFacing || "left",
         });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch pet." });

@@ -28,7 +28,7 @@ const pointTransactionSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["award", "spend"],
+            enum: ["award", "spend", "login"],
             default: "award",
         },
         batchId: {
