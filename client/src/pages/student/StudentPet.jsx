@@ -47,7 +47,7 @@ export default function StudentPet() {
     const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
     const flipped = (facing === "right") !== (artFacing === "right");
 
-    const ROAM_RANGE = 130;   // px each side of center — tune to your scene width
+    const ROAM_RANGE = 140;   // px each side of center
 
     const navigate = useNavigate();
 

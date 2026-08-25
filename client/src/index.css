@@ -118,7 +118,6 @@ h1, h2, h3, h4, h5 {
 
 @media (prefers-reduced-motion: reduce) {
   .pet-idle, .pet-roamer.traveling .pet-container { animation: none; }
-  .pet-roamer { transition: none; }
 }
 
 .pet-shadow {
