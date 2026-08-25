@@ -159,7 +159,7 @@ export default function StudentBattle() {
                                     </div>
                                     <div style={{ textAlign: "center" }}>
                                         <div className={petAttacking ? "pet-tackle" : ""}>
-                                            <div style={{ transform: "scaleX(-1)", display: "inline-block" }}>
+                                            <div style={{ transform: pet.artFacing === "left" ? "scaleX(-1)" : "none", display: "inline-block" }}>
                                                 <img
                                                     src={`/assets/pets/${pet.species}.png`}
                                                     alt={pet.name}
