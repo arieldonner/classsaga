@@ -133,10 +133,11 @@ router.post("/attack", protect, async (req, res) => {
         battleState.currentMonsterHP = petWon ? null : monsterHP;
         battleState.dailyBattleUsed = true;
         battleState.lastBattleDate = new Date();
+        if (petWon) battleState.monsterIndex += 1;
+
+        await battleState.save();
 
         if (petWon) {
-            battleState.monsterIndex += 1;
-
             // XP reward
             const prevLevel = pet.level;
             pet.experience += 20;
@@ -165,21 +166,25 @@ router.post("/attack", protect, async (req, res) => {
                 droppableItems = await ShopItem.find({ itemType: "consumable", isActive: true });
             }
 
-            const droppedItem = droppableItems[Math.floor(Math.random() * droppableItems.length)];
-            await InventoryItem.findOneAndUpdate(
-                { student: req.user._id, shopItem: droppedItem._id },
-                { $inc: { quantity: 1 } },
-                { upsert: true, new: true }
-            );
+            const droppedItem = droppableItems.length
+                ? droppableItems[Math.floor(Math.random() * droppableItems.length)]
+                : null;
+
+            if (droppedItem) {
+                await InventoryItem.findOneAndUpdate(
+                    { student: req.user._id, shopItem: droppedItem._id },
+                    { $inc: { quantity: 1 } },
+                    { upsert: true, new: true }
+                );
+            }
 
             reward = {
                 xp: 20,
                 leveledUp: pet.level > prevLevel,
-                itemName: droppedItem.name,
+                ...(droppedItem && { itemName: droppedItem.name, itemImage: droppedItem.imageKey }),
             };
-        }
 
-        await battleState.save();
+        }
 
         res.json({
             petWon,

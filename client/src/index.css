@@ -241,3 +241,66 @@ a.text-decoration-none.card:hover {
     border-color: var(--color-border);
 }
 
+/* Battle */
+@keyframes monsterDefeat {
+  0%   { rotate: 0deg;  translate: 0 0;      opacity: 1; filter: brightness(1); }
+  12%  { rotate: 0deg;  translate: 0 0;      opacity: 1; filter: brightness(2.4) saturate(.2); }
+  30%  { rotate: 6deg;  translate: 4px 0;    opacity: 1; filter: brightness(1); }
+  100% { rotate: 78deg; translate: 22px 16px; opacity: 0; filter: brightness(1); }
+}
+
+.monster-defeated {
+  animation: monsterDefeat 0.95s cubic-bezier(.55, .06, .68, .19) forwards;
+  transform-origin: bottom center;
+}
+
+.chest-reveal {
+  position: absolute;
+  bottom: -35px; left: 50%;
+  translate: -50% 0;
+  width: 160px;
+}
+
+.chest-img {
+  width: 100%;
+  display: block;
+  transform: scaleX(-1);
+}
+
+@keyframes chestDrop {
+  0%   { translate: 0 -130px; opacity: 0; scale: 1 1; }
+  55%  { translate: 0 0;      opacity: 1; scale: 1 1; }
+  70%  { scale: 1.14 .86; }                              /* impact squash */
+  85%  { scale: .97 1.03; }
+  100% { translate: 0 0;      opacity: 1; scale: 1 1; }
+}
+
+@keyframes chestShake {
+  0%, 100% { rotate: 0deg; }
+  15% { rotate: -7deg; }  30% { rotate: 6deg; }
+  45% { rotate: -4deg; }  60% { rotate: 3deg; }  80% { rotate: -2deg; }
+}
+
+@keyframes chestPop {
+  0%   { scale: 1 1; }
+  40%  { scale: .88 1.16; }
+  100% { scale: 1 1; }
+}
+
+.chest-drop  .chest-img { animation: chestDrop  .75s cubic-bezier(.34,1.56,.64,1) both; }
+.chest-shake .chest-img { animation: chestShake .7s  ease-in-out; }
+.chest-open  .chest-img { animation: chestPop   .45s cubic-bezier(.34,1.56,.64,1) both; }
+
+.chest-item {
+  position: absolute;
+  bottom: 50%; left: 50%;
+  width: 50%;
+  animation: itemRise 1s cubic-bezier(.22,.9,.3,1) both;
+}
+
+@keyframes itemRise {
+  0%   { translate: -50% 45%;  opacity: 0; scale: .4 .4; }
+  55%  { translate: -50% -70%; opacity: 1; scale: 1.18 1.18; }
+  100% { translate: -50% -55%; opacity: 1; scale: 1 1; }
+}
+

@@ -15,6 +15,14 @@ export default function StudentBattle() {
     const [monsterAttacking, setMonsterAttacking] = useState(false);
     const [error, setError] = useState("");
     const logRef = useRef(null);
+    const [revealPhase, setRevealPhase] = useState(null);   // null | "drop" | "shake" | "open"
+    const revealTimers = useRef([]);
+
+    const clearReveal = () => {
+        revealTimers.current.forEach(clearTimeout);
+        revealTimers.current = [];
+        setRevealPhase(null);
+    };
 
     const fetchStatus = async () => {
         try {
@@ -30,6 +38,8 @@ export default function StudentBattle() {
             setLoading(false);
         }
     };
+
+    useEffect(() => () => revealTimers.current.forEach(clearTimeout), []);
 
     useEffect(() => {
         fetchStatus();
@@ -47,6 +57,7 @@ export default function StudentBattle() {
         setBattleResult(null);
         setDisplayedLog([]);
         setAnimatingRound(null);
+        clearReveal();
 
         try {
             const res = await api.post("/api/battle/attack");
@@ -67,8 +78,18 @@ export default function StudentBattle() {
                     setAnimatingRound(null);
                     setPetAttacking(false);
                     setMonsterAttacking(false);
-                    fetchStatus();
-                    setBattling(false);
+
+                    if (data.petWon && data.reward) {
+                        revealTimers.current.push(
+                            setTimeout(() => setRevealPhase("drop"),  950),
+                            setTimeout(() => setRevealPhase("shake"), 1700),
+                            setTimeout(() => setRevealPhase("open"),  2450),
+                            setTimeout(() => { fetchStatus(); setBattling(false); }, 3600),
+                        );
+                    } else {
+                        fetchStatus();
+                        setBattling(false);
+                    }
                     return;
                 }
                 const round = data.rounds[i];
@@ -162,15 +183,33 @@ export default function StudentBattle() {
                                             style={{ width: `${hpPercent(animatingRound ? animatingRound.monsterHP : battleResult ? battleResult.finalMonsterHP : battleStatus.monster.currentHP, battleStatus.monster.maxHP)}%` }}
                                         />
                                     </div>
-                                    <div style={{ textAlign: "center" }}>
-                                        <div className={monsterAttacking ? "monster-hit" : ""}>
+                                    <div style={{ textAlign: "center", position: "relative" }}>
+                                        <div className={`${monsterAttacking ? "monster-hit" : ""} ${battleResult?.petWon ? "monster-defeated" : ""}`}>
                                             <img
-                                                src={battleResult?.petWon ? "/assets/monsters/lootbox_closed.png" : battleStatus.monster.imageKey}
+                                                src={battleStatus.monster.imageKey}
                                                 alt={battleStatus.monster.name}
                                                 className={battleResult?.petWon ? "" : "battle-breathe"}
                                                 style={{ maxHeight: "160px", objectFit: "contain" }}
                                             />
                                         </div>
+                                        {revealPhase && (
+                                            <div className={`chest-reveal chest-${revealPhase}`}>
+                                                <img
+                                                    className="chest-img"
+                                                    src={revealPhase === "open"
+                                                        ? "/assets/effects/WoodenChest_Open.png"
+                                                        : "/assets/effects/WoodenChest_Closed.png"}
+                                                    alt="Treasure"
+                                                />
+                                                {revealPhase === "open" && battleResult?.reward?.itemImage && (
+                                                    <img
+                                                        className="chest-item"
+                                                        src={battleResult.reward.itemImage}
+                                                        alt={battleResult.reward.itemName}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
