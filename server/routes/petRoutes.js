@@ -388,8 +388,7 @@ router.post("/choose-starter", protect, async (req, res) => {
         }
 
         const existingPet = await Pet.findOne({
-            student: req.user._id,
-            isActive: true,
+            student: req.user._id
         });
 
         if (existingPet) {
@@ -426,12 +425,11 @@ router.patch("/:petId/activate", protect, async (req, res) => {
         }
 
         await Pet.updateMany(
-            { student: req.user._id },
+            { student: req.user._id, _id: { $ne: pet._id } },
             { isActive: false }
         );
 
-        pet.isActive = true;
-        await pet.save();
+        await Pet.updateOne({ _id: pet._id }, { isActive: true });
 
         res.json({
             message: `${pet.name} is now active.`,
