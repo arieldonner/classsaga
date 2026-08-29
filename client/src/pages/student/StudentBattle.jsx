@@ -67,11 +67,22 @@ export default function StudentBattle() {
             let i = 0;
             const stepRound = () => {
                 if (i >= data.rounds.length) {
-                    const endLines = [data.petWon ? "Victory! Monster defeated!" : "Defeated! Try again tomorrow."];
+                    const endLines = [];
+
+                    if (data.petWon) {
+                        endLines.push("Victory! Monster defeated!");
+                    } else {
+                        const startHP = battleStatus.monster.currentHP ?? battleStatus.monster.maxHP;
+                        const dealt   = Math.max(0, startHP - data.finalMonsterHP);
+                        const pct     = Math.round((data.finalMonsterHP / battleStatus.monster.maxHP) * 100);
+
+                        endLines.push(`${pet.name} dealt ${dealt} damage today!`);
+                        endLines.push(`${battleStatus.monster.name} is down to ${pct}%! Come back tomorrow!`);
+                    }
                     if (data.petWon && data.reward) {
                         endLines.push(`+${data.reward.xp} XP earned!`);
                         if (data.reward.leveledUp) endLines.push("Your pet leveled up!");
-                        endLines.push(`Item dropped: ${data.reward.itemName}!`);
+                        //endLines.push(`Item dropped: ${data.reward.itemName}!`);
                     }
                     setDisplayedLog(prev => [...prev, ...endLines]);
                     setBattleResult(data);
@@ -83,7 +94,11 @@ export default function StudentBattle() {
                         revealTimers.current.push(
                             setTimeout(() => setRevealPhase("drop"),  950),
                             setTimeout(() => setRevealPhase("shake"), 1700),
-                            setTimeout(() => setRevealPhase("open"),  2450),
+                            //setTimeout(() => setRevealPhase("open"),  2450),
+                            setTimeout(() => {
+                                setRevealPhase("open");
+                                setDisplayedLog(prev => [...prev, `Item dropped: ${data.reward.itemName}!`]);
+                            }, 2450),
                             setTimeout(() => { fetchStatus(); setBattling(false); }, 3600),
                         );
                     } else {
