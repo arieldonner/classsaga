@@ -19,6 +19,7 @@ export default function StudentBattle() {
     const revealTimers = useRef([]);
     const [petHurt, setPetHurt] = useState(false);
     const [monsterHurt, setMonsterHurt] = useState(false);
+    const [hurtSrc, setHurtSrc] = useState({ pet: null, monster: null });
 
     const clearReveal = () => {
         revealTimers.current.forEach(clearTimeout);
@@ -56,6 +57,23 @@ export default function StudentBattle() {
             logRef.current.scrollTop = logRef.current.scrollHeight;
         }
     }, [displayedLog]);
+
+    useEffect(() => {
+        if (!pet || !battleStatus?.monster) return;
+
+        const load = (src) => new Promise((resolve) => {
+            const img = new Image();
+            img.onload  = () => resolve(src);
+            img.onerror = () => resolve(null);
+            img.src = src;
+        });
+
+        Promise.all([
+            load(`/assets/pets/${pet.species}_hurt.png`),
+            load(battleStatus.monster.imageKey.replace(".png", "_hurt.png")),
+        ]).then(([petSrc, monsterSrc]) => setHurtSrc({ pet: petSrc, monster: monsterSrc }));
+    }, [pet, battleStatus]);
+
 
     const handleAttack = async () => {
         setBattling(true);
@@ -186,7 +204,7 @@ export default function StudentBattle() {
                                             <div className={petHurt ? "pet-hurt" : ""}>
                                                 <div style={{ transform: pet.artFacing === "left" ? "scaleX(-1)" : "none", display: "inline-block" }}>
                                                     <img
-                                                        src={`/assets/pets/${pet.species}.png`}
+                                                        src={petHurt && hurtSrc.pet ? hurtSrc.pet : `/assets/pets/${pet.species}.png`}
                                                         alt={pet.name}
                                                         className="battle-breathe"
                                                         style={{ maxHeight: "160px", objectFit: "contain" }}
@@ -213,7 +231,9 @@ export default function StudentBattle() {
                                         <div className={`${monsterAttacking ? "monster-attack" : ""} ${battleResult?.petWon ? "monster-defeated" : ""}`}>
                                             <div className={monsterHurt ? "monster-hurt" : ""}>
                                                 <img
-                                                    src={battleStatus.monster.imageKey}
+                                                    src={(monsterHurt || battleResult?.petWon) && hurtSrc.monster
+                                                        ? hurtSrc.monster
+                                                        : battleStatus.monster.imageKey}
                                                     alt={battleStatus.monster.name}
                                                     className={battleResult?.petWon ? "" : "battle-breathe"}
                                                     style={{ maxHeight: "160px", objectFit: "contain" }}
