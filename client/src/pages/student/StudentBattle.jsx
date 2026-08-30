@@ -17,11 +17,17 @@ export default function StudentBattle() {
     const logRef = useRef(null);
     const [revealPhase, setRevealPhase] = useState(null);   // null | "drop" | "shake" | "open"
     const revealTimers = useRef([]);
+    const [petHurt, setPetHurt] = useState(false);
+    const [monsterHurt, setMonsterHurt] = useState(false);
 
     const clearReveal = () => {
         revealTimers.current.forEach(clearTimeout);
         revealTimers.current = [];
         setRevealPhase(null);
+        setPetAttacking(false);
+        setMonsterAttacking(false);
+        setPetHurt(false);
+        setMonsterHurt(false);
     };
 
     const fetchStatus = async () => {
@@ -62,6 +68,7 @@ export default function StudentBattle() {
         try {
             const res = await api.post("/api/battle/attack");
             const data = res.data;
+            const at = (ms, fn) => revealTimers.current.push(setTimeout(fn, ms));
 
             // Animate through rounds
             let i = 0;
@@ -82,7 +89,6 @@ export default function StudentBattle() {
                     if (data.petWon && data.reward) {
                         endLines.push(`+${data.reward.xp} XP earned!`);
                         if (data.reward.leveledUp) endLines.push("Your pet leveled up!");
-                        //endLines.push(`Item dropped: ${data.reward.itemName}!`);
                     }
                     setDisplayedLog(prev => [...prev, ...endLines]);
                     setBattleResult(data);
@@ -94,7 +100,6 @@ export default function StudentBattle() {
                         revealTimers.current.push(
                             setTimeout(() => setRevealPhase("drop"),  950),
                             setTimeout(() => setRevealPhase("shake"), 1700),
-                            //setTimeout(() => setRevealPhase("open"),  2450),
                             setTimeout(() => {
                                 setRevealPhase("open");
                                 setDisplayedLog(prev => [...prev, `Item dropped: ${data.reward.itemName}!`]);
@@ -112,16 +117,20 @@ export default function StudentBattle() {
                 setDisplayedLog(prev => [...prev, ...round.lines]);
 
                 setPetAttacking(true);
-                setTimeout(() => {
-                    setPetAttacking(false);
-                    if (round.lines.length > 1) {
-                        setMonsterAttacking(true);
-                        setTimeout(() => setMonsterAttacking(false), 350);
-                    }
-                }, 350);
+                at(200, () => setMonsterHurt(true));      // contact
+                at(450, () => setMonsterHurt(false));
+                at(350, () => setPetAttacking(false));
+
+                if (round.lines.length > 1) {
+                    at(350, () => setMonsterAttacking(true));
+                    at(550, () => setPetHurt(true));      // contact
+                    at(800, () => setPetHurt(false));
+                    at(700, () => setMonsterAttacking(false));
+                }
 
                 i++;
-                setTimeout(stepRound, 900);
+                at(900, stepRound);
+
             };
             stepRound();
         } catch (err) {
@@ -174,13 +183,15 @@ export default function StudentBattle() {
                                     </div>
                                     <div style={{ textAlign: "center" }}>
                                         <div className={petAttacking ? "pet-tackle" : ""}>
-                                            <div style={{ transform: pet.artFacing === "left" ? "scaleX(-1)" : "none", display: "inline-block" }}>
-                                                <img
-                                                    src={`/assets/pets/${pet.species}.png`}
-                                                    alt={pet.name}
-                                                    className="battle-breathe"
-                                                    style={{ maxHeight: "160px", objectFit: "contain" }}
-                                                />
+                                            <div className={petHurt ? "pet-hurt" : ""}>
+                                                <div style={{ transform: pet.artFacing === "left" ? "scaleX(-1)" : "none", display: "inline-block" }}>
+                                                    <img
+                                                        src={`/assets/pets/${pet.species}.png`}
+                                                        alt={pet.name}
+                                                        className="battle-breathe"
+                                                        style={{ maxHeight: "160px", objectFit: "contain" }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -199,13 +210,15 @@ export default function StudentBattle() {
                                         />
                                     </div>
                                     <div style={{ textAlign: "center", position: "relative" }}>
-                                        <div className={`${monsterAttacking ? "monster-hit" : ""} ${battleResult?.petWon ? "monster-defeated" : ""}`}>
-                                            <img
-                                                src={battleStatus.monster.imageKey}
-                                                alt={battleStatus.monster.name}
-                                                className={battleResult?.petWon ? "" : "battle-breathe"}
-                                                style={{ maxHeight: "160px", objectFit: "contain" }}
-                                            />
+                                        <div className={`${monsterAttacking ? "monster-attack" : ""} ${battleResult?.petWon ? "monster-defeated" : ""}`}>
+                                            <div className={monsterHurt ? "monster-hurt" : ""}>
+                                                <img
+                                                    src={battleStatus.monster.imageKey}
+                                                    alt={battleStatus.monster.name}
+                                                    className={battleResult?.petWon ? "" : "battle-breathe"}
+                                                    style={{ maxHeight: "160px", objectFit: "contain" }}
+                                                />
+                                            </div>
                                         </div>
                                         {revealPhase && (
                                             <div className={`chest-reveal chest-${revealPhase}`}>
