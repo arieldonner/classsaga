@@ -6,17 +6,18 @@ const Pet = require("../models/Pet");
 const { getMonster } = require("../config/monsters");
 const InventoryItem = require("../models/InventoryItem");
 const ShopItem = require("../models/ShopItem");
+const applyLevelUps = require("../utils/applyLevelUps");
 
 const PET_BATTLE_HP = 50;
 
 const calculatePetDamage = (pet, monster) => {
-    const base = Math.max(1, pet.strength - monster.defense) * 2;
+    const base = Math.round(pet.strength * 2 * (10 / (10 + monster.defense)));
     const lucky = Math.random() < pet.speed / 100;
-    return lucky ? base * 2 : base;
+    return Math.max(1, lucky ? base * 2 : base);
 };
 
 const calculateMonsterDamage = (monster, pet) => {
-    return Math.max(1, monster.attack - pet.defense) * 2;
+    return Math.max(1, Math.round(monster.attack * 2 * (10 / (10 + pet.defense))));
 };
 
 router.get("/status", protect, async (req, res) => {
@@ -139,15 +140,8 @@ router.post("/attack", protect, async (req, res) => {
 
         if (petWon) {
             // XP reward
-            const prevLevel = pet.level;
             pet.experience += 20;
-            while (pet.experience >= 100) {
-                pet.experience -= 100;
-                pet.level += 1;
-                pet.strength += 1;
-                pet.speed += 1;
-                pet.defense += 1;
-            }
+            const leveledUp = applyLevelUps(pet);
             await pet.save();
 
             // Item drop - 70% consumable, 30% cosmetic
@@ -180,8 +174,9 @@ router.post("/attack", protect, async (req, res) => {
 
             reward = {
                 xp: 20,
-                leveledUp: pet.level > prevLevel,
-                ...(droppedItem && { itemName: droppedItem.name, itemImage: droppedItem.imageKey }),
+                leveledUp,
+                itemName: droppedItem.name,
+                itemImage: droppedItem.imageKey,
             };
 
         }

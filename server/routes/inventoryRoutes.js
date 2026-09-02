@@ -6,6 +6,7 @@ const { protect } = require("../middleware/authMiddleware");
 const Pet = require("../models/Pet");
 const ShopItem = require("../models/ShopItem");
 const PetEquipment = require("../models/PetEquipment");
+const applyLevelUps = require("../utils/applyLevelUps");
 
 // Get current student's inventory
 router.get("/my-items", protect, async (req, res) => {
@@ -90,13 +91,7 @@ router.post("/use", protect, async (req, res) => {
         if (item.defenseValue) pet.defense += item.defenseValue;
 
         // level up
-        let leveledUp = false;
-
-        while (pet.experience >= 100) {
-            pet.experience -= 100;
-            pet.level += 1;
-            leveledUp = true;
-        }
+        const leveledUp = applyLevelUps(pet);
 
         // Reduce inventory
         inventoryItem.quantity -= 1;

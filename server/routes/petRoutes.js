@@ -6,6 +6,7 @@ const DailyCareLog = require("../models/DailyCareLog");
 const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
+const applyLevelUps = require("../utils/applyLevelUps");
 
 const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
@@ -36,16 +37,6 @@ const applyPetDecay = (pet) => {
     pet.lastUpdated = now;
 
     return true;
-};
-
-const applyLevelUps = (pet) => {
-    while (pet.experience >= 100) {
-        pet.experience -= 100;
-        pet.level += 1;
-        pet.strength += 1;
-        pet.speed += 1;
-        pet.defense += 1;
-    }
 };
 
 // Get current student's pet
