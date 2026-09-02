@@ -230,14 +230,19 @@ export default function StudentBattle() {
                                     <div style={{ textAlign: "center", position: "relative" }}>
                                         <div className={`${monsterAttacking ? "monster-attack" : ""} ${battleResult?.petWon ? "monster-defeated" : ""}`}>
                                             <div className={monsterHurt ? "monster-hurt" : ""}>
-                                                <img
-                                                    src={(monsterHurt || battleResult?.petWon) && hurtSrc.monster
-                                                        ? hurtSrc.monster
-                                                        : battleStatus.monster.imageKey}
-                                                    alt={battleStatus.monster.name}
-                                                    className={battleResult?.petWon ? "" : "battle-breathe"}
-                                                    style={{ maxHeight: "160px", objectFit: "contain" }}
-                                                />
+                                                <div style={{
+                                                    transform: battleStatus.monster.artFacing === "right" ? "scaleX(-1)" : "none",
+                                                    display: "inline-block",
+                                                }}>
+                                                    <img
+                                                        src={(monsterHurt || battleResult?.petWon) && hurtSrc.monster
+                                                            ? hurtSrc.monster
+                                                            : battleStatus.monster.imageKey}
+                                                        alt={battleStatus.monster.name}
+                                                        className={battleResult?.petWon ? "" : "battle-breathe"}
+                                                        style={{ maxHeight: "160px", objectFit: "contain" }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                         {revealPhase && (
