@@ -6,6 +6,7 @@ const DailyCareLog = require("../models/DailyCareLog");
 const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
+const applyLevelUps = require("../utils/applyLevelUps");
 
 const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
@@ -36,16 +37,6 @@ const applyPetDecay = (pet) => {
     pet.lastUpdated = now;
 
     return true;
-};
-
-const applyLevelUps = (pet) => {
-    while (pet.experience >= 100) {
-        pet.experience -= 100;
-        pet.level += 1;
-        pet.strength += 1;
-        pet.speed += 1;
-        pet.defense += 1;
-    }
 };
 
 // Get current student's pet
@@ -388,8 +379,7 @@ router.post("/choose-starter", protect, async (req, res) => {
         }
 
         const existingPet = await Pet.findOne({
-            student: req.user._id,
-            isActive: true,
+            student: req.user._id
         });
 
         if (existingPet) {
@@ -426,12 +416,11 @@ router.patch("/:petId/activate", protect, async (req, res) => {
         }
 
         await Pet.updateMany(
-            { student: req.user._id },
+            { student: req.user._id, _id: { $ne: pet._id } },
             { isActive: false }
         );
 
-        pet.isActive = true;
-        await pet.save();
+        await Pet.updateOne({ _id: pet._id }, { isActive: true });
 
         res.json({
             message: `${pet.name} is now active.`,
