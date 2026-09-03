@@ -1,10 +1,17 @@
 @keyframes battleBreathe {
-  0%, 100% { transform: scaleY(1); }
-  50%       { transform: scaleY(0.96); }
+  0%, 100% { scale: 1 1; }
+  50%      { scale: 0.99 1.015; }
+}
+
+@keyframes battleSway {
+  0%, 100% { rotate: -0.8deg; translate: 0 0; }
+  50%      { rotate:  0.8deg; translate: 0 -2px; }
 }
 
 .battle-breathe {
-  animation: battleBreathe 2.5s ease-in-out infinite;
+  animation:
+    battleBreathe 2.7s ease-in-out infinite,
+    battleSway    4.3s ease-in-out infinite;
   transform-origin: bottom center;
 }
 
