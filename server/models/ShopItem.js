@@ -79,6 +79,18 @@ const shopItemSchema = new mongoose.Schema(
             type: String,
             default: "none",
         },
+        anchorSlot: { 
+            type: String, default: null 
+        },   // "headTop" | "headSide" | "ground" | "body"
+        offsetX: { 
+            type: String, default: "0%"  
+        },
+        offsetY: { 
+            type: String, default: "0%"  
+        },
+        accessoryWidth: { 
+            type: String, default: "50px" 
+        },
     },
     { timestamps: true }
 );

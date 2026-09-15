@@ -5,6 +5,8 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
+import AnchorTuner from "../../components/dev/AnchorTuner";
+
 
 const withRoam = (offset, roamX) => {
   if (!offset) return offset;
@@ -12,6 +14,35 @@ const withRoam = (offset, roamX) => {
   if (o.left)  o.left  = `calc(${o.left} + ${roamX}px)`;
   if (o.right) o.right = `calc(${o.right} - ${roamX}px)`;
   return o;
+};
+
+const addOffset = (base, delta) => {
+    const d = String(delta ?? "0%").trim();
+    return d.startsWith("-")
+        ? `calc(${base} - ${d.slice(1)})`
+        : `calc(${base} + ${d})`;
+};
+
+const resolveAccessory = (item, offsets, equipped) => {
+    if (!item) return undefined;
+
+    const itemOverrides = offsets?.accessoryOverrides?.[item.name] ?? {};
+    const slot  = equipped?.anchorSlot ?? itemOverrides.defaultSlot ?? item.anchorSlot;
+    const tuned = itemOverrides[slot];
+
+    if (tuned) {
+        return { left: tuned.x, top: tuned.y, width: tuned.width, translate: "-50% -50%" };
+    }
+
+    const anchor = offsets?.anchors?.[slot];
+    if (!anchor) return offsets?.accessories?.[item.name];   // legacy fallback
+
+    return {
+        left:      addOffset(anchor.x, item.offsetX),
+        top:       addOffset(anchor.y, item.offsetY),
+        width:     item.accessoryWidth ?? "20%",
+        translate: "-50% -50%",
+    };
 };
 
 export default function StudentPet() {
@@ -45,6 +76,7 @@ export default function StudentPet() {
     const [travelDur, setTravelDur] = useState(1.1);
 
     const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
+    const [tuning, setTuning] = useState(false);
     const flipped = (facing === "right") !== (artFacing === "right");
 
     const ROAM_RANGE = 140;   // px each side of center
@@ -70,6 +102,13 @@ export default function StudentPet() {
 
 
     const accessory = equipment.accessory?.shopItem;
+    const accItemOverrides = animationOffsets?.accessoryOverrides?.[accessory?.name] ?? {};
+    const accSlot  = equipment.accessory?.anchorSlot ?? accItemOverrides.defaultSlot ?? accessory?.anchorSlot;
+    const accStart = accItemOverrides[accSlot] ?? {
+        x: animationOffsets?.anchors?.[accSlot]?.x ?? "50%",
+        y: animationOffsets?.anchors?.[accSlot]?.y ?? "30%",
+        width: accessory?.accessoryWidth ?? "20%",
+    };
 
     const formatLogTime = () => {
         return new Date().toLocaleString(undefined, {
@@ -183,7 +222,7 @@ export default function StudentPet() {
     }, [messages]);
 
     useEffect(() => {
-        if (busy) { setTraveling(false); return; }
+        if (busy || tuning) { setTraveling(false); return; }
         let nextId, travelId;
 
         const schedule = () => {
@@ -207,7 +246,7 @@ export default function StudentPet() {
 
         schedule();
         return () => { clearTimeout(nextId); clearTimeout(travelId); };
-        }, [busy]);
+        }, [busy, tuning]);
 
     useEffect(() => {
         if (busy) setFacing(artFacing);
@@ -593,13 +632,13 @@ export default function StudentPet() {
                                             className={`pet-roamer ${traveling && !busy ? "traveling" : ""}`}
                                             style={{
                                                 "--travel-dur": `${travelDur}s`,
-                                                translate: `${roamX}px 0`,
-                                                scale: flipped ? "-1 1" : "1 1",
+                                                translate: tuning ? "0px 0" : `${roamX}px 0`,
+                                                scale:     tuning ? "1 1"   : (flipped ? "-1 1" : "1 1"),
                                             }}
                                         >
                                             <div className="pet-shadow" style={animationOffsets?.shadow} />
                                             <div className={`pet-container ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
-                                                <div className="pet-sprite pet-idle">
+                                                <div className={`pet-sprite ${tuning ? "" : "pet-idle"}`}>
                                                     <img
                                                         src={`/assets/pets/${pet.species}.png`}
                                                         alt="Pet"
@@ -607,12 +646,22 @@ export default function StudentPet() {
                                                         style={{ maxHeight: "340px" }}
                                                     />
 
-                                                    {accessory?.imageKey && (
+                                                    {accessory?.imageKey && !tuning && (
                                                         <img
                                                             src={accessory.imageKey}
                                                             alt={accessory.name}
                                                             className="pet-accessory"
-                                                            style={animationOffsets?.accessories?.[accessory?.name]}
+                                                            style={resolveAccessory(accessory, animationOffsets, equipment.accessory)}
+                                                        />
+                                                    )}
+                                                    {import.meta.env.DEV && (
+                                                        <AnchorTuner
+                                                            anchors={animationOffsets?.anchors}
+                                                            species={pet.species}
+                                                            onVisibilityChange={setTuning}
+                                                            accessory={accessory}
+                                                            accessorySlot={accSlot}
+                                                            accessoryStart={accStart}
                                                         />
                                                     )}
                                                 </div>

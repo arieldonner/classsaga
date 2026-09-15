@@ -259,4 +259,37 @@ router.post("/unequip", protect, async (req, res) => {
     }
 });
 
+// Accessory location choice
+// const HEAD_SLOTS = ["headTop", "headSide"];
+
+// router.patch("/equipment/accessory/anchor", protect, async (req, res) => {
+//     try {
+//         if (req.user.role !== "student") {
+//             return res.status(403).json({ message: "Only students have equipment." });
+//         }
+
+//         const { anchorSlot } = req.body;
+
+//         if (!HEAD_SLOTS.includes(anchorSlot)) {
+//             return res.status(400).json({ message: "Invalid position." });
+//         }
+
+//         const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+//         if (!pet) return res.status(404).json({ message: "Pet not found." });
+
+//         const updated = await PetEquipment.findOneAndUpdate(
+//             { pet: pet._id, slot: "accessory" },
+//             { anchorSlot },
+//             { new: true }
+//         ).populate("shopItem");
+
+//         if (!updated) return res.status(404).json({ message: "No accessory equipped." });
+
+//         res.json(updated);
+//     } catch (err) {
+//         res.status(500).json({ message: "Failed to update position." });
+//     }
+// });
+
+
 module.exports = router;

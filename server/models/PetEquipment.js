@@ -22,6 +22,10 @@ const petEquipmentSchema = new mongoose.Schema(
             ref: "ShopItem",
             required: true,
         },
+        anchorSlot: { 
+            type: String, 
+            default: null 
+        },
     },
     { timestamps: true }
 );
