@@ -87,6 +87,7 @@ export default function AnchorTuner({ anchors, species, onVisibilityChange, acce
                         position: "absolute",
                         left: acc.x, top: acc.y, width: acc.width,
                         translate: "-50% -50%",
+                        transform: acc.flipX ? "scaleX(-1)" : undefined,
                         cursor: "grab",
                         pointerEvents: "auto",
                         zIndex: 2,

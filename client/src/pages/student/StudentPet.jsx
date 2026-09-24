@@ -31,7 +31,7 @@ const resolveAccessory = (item, offsets, equipped) => {
     const tuned = itemOverrides[slot];
 
     if (tuned) {
-        return { left: tuned.x, top: tuned.y, width: tuned.width, translate: "-50% -50%" };
+        return { left: tuned.x, top: tuned.y, width: tuned.width, translate: "-50% -50%", transform: tuned.flipX ? "scaleX(-1)" : undefined, };
     }
 
     const anchor = offsets?.anchors?.[slot];
