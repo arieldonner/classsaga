@@ -37,9 +37,6 @@ const PET_TYPES = {
                     eyes: { x: "32.5%", y: "47.4%", width: "65%"}, 
                 },
             },
-            accessories: {
-                "Bow": { top: "90px", width: "50px", left: "50%" },
-            },
             shadow: { bottom: "17.2%", width: "26.9%", left: "54.3%" },
         },
     },
@@ -80,9 +77,6 @@ const PET_TYPES = {
                 "Silver Monocle": { 
                     eyes: { x: "50.1%", y: "39.1%", width: "68.5%" }, 
                 },
-            },
-            accessories: {
-                "Bow": { top: "87px", width: "50px", left: "48%" },
             },
             shadow: { bottom: "24.5%", width: "34.0%", left: "47.6%" },
         },
@@ -125,9 +119,6 @@ const PET_TYPES = {
                     eyes: { x: "36.6%", y: "30.0%", width: "68.5%" }, 
                 },
             },
-            accessories: {
-                "Bow": { top: "35px", width: "50px", left: "35%" },
-            },
             shadow: { bottom: "4.2%",  width: "51.6%", left: "55.7%" },
         },
     },
@@ -168,9 +159,6 @@ const PET_TYPES = {
                 "Silver Monocle": { 
                     eyes: { x: "48.7%", y: "52.4%", width: "54%" }, 
                 },
-            },
-            accessories: {
-                "Bow": { top: "90px", width: "50px", left: "50%" },
             },
             shadow: { bottom: "22.2%", width: "52.8%", left: "49.9%" },
         },
@@ -214,9 +202,6 @@ const PET_TYPES = {
                     eyes: { x: "53.7%", y: "65.0%", width: "89%" }, 
                 },
             },
-            accessories: {
-                "Bow": { top: "90px", width: "50px", left: "50%" },
-            },
             shadow: { bottom: "10.4%", width: "39.8%", left: "51.8%" },
         },  
     },
@@ -258,9 +243,6 @@ const PET_TYPES = {
                     eyes: { x: "51.6%", y: "49.1%", width: "84.5%" }, 
                 },
             },
-            accessories: {
-                "Bow": { top: "90px", width: "50px", left: "50%" },
-            },
             shadow: { bottom: "12.1%", width: "50.8%", left: "48.4%" },
         },
     },
@@ -301,9 +283,6 @@ const PET_TYPES = {
                 "Silver Monocle": { 
                     eyes: { x: "58.1%", y: "40.9%", width: "73%" }, 
                 },
-            },
-            accessories: {
-                "Bow": { top: "90px", width: "50px", left: "50%" },
             },
             shadow: { bottom: "4.4%", width: "22.8%", left: "43.1%" },
         },
