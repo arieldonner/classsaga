@@ -304,7 +304,7 @@ export default function StudentBattle() {
                                 <div className="card shadow-sm p-4">
                                     <h5 className="mb-3">Monster Stats</h5>
                                     <div className="d-flex gap-4">
-                                        <div><span className="fw-semibold">ATK:</span> {battleStatus.monster.attack}</div>
+                                        <div><span className="fw-semibold">STR:</span> {battleStatus.monster.attack}</div>
                                         <div><span className="fw-semibold">DEF:</span> {battleStatus.monster.defense}</div>
                                     </div>
                                 </div>

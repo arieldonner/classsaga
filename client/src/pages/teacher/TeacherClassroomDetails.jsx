@@ -360,7 +360,7 @@ export default function TeacherClassroomDetails() {
                         {selectedStudentList.map((student) => (
                             <span
                                 key={student._id}
-                                className="badge rounded-pill text-bg-primary d-inline-flex align-items-center gap-2"
+                                className="badge rounded-pill student-chip d-inline-flex align-items-center gap-2"
                             >
                                 {student.name}
                                 <button
@@ -375,7 +375,7 @@ export default function TeacherClassroomDetails() {
 
                         <button
                             type="button"
-                            className="btn btn-link btn-sm p-0"
+                            className="btn btn-link btn-sm p-0 chip-clear"
                             onClick={() => setSelectedStudents([])}
                         >
                             Clear all

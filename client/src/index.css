@@ -241,4 +241,29 @@ a.text-decoration-none.card:hover {
     border-color: var(--color-border);
 }
 
+.student-chip {
+  background-color: var(--color-green);
+  color: var(--color-parchment);
+  border: 1px solid rgba(0, 0, 0, .12);
+  font-weight: 600;
+  padding: .4em .7em;
+}
 
+.student-chip .btn-close {
+  opacity: .75;
+}
+
+.student-chip .btn-close:hover {
+  opacity: 1;
+}
+
+.chip-clear {
+  color: var(--color-amber);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.chip-clear:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
