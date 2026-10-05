@@ -26,6 +26,12 @@ const addOffset = (base, delta) => {
 
 const ACCESSORY_SLOTS = ["headSide", "headTop", "eyes"];
 const SLOT_ORDER = ["background", "headTop", "headSide", "eyes"];
+const LOG_ICONS = {
+    reward: "bi-arrow-up-circle-fill",
+    cost: "bi-dash-circle-fill",
+    neutral: "bi-dot",
+};
+
 const SLOT_LABELS = {
     background: "Background",
     headSide: "Side",
@@ -114,8 +120,8 @@ export default function StudentPet() {
         ? { backgroundImage: `url(${bgKey})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
         : { background: "var(--color-panel)" };
 
-    const formatLogTime = () => {
-        return new Date().toLocaleString(undefined, {
+    const formatLogTime = (at) => {
+        return new Date(at ?? Date.now()).toLocaleString(undefined, {
             month: "short",
             day: "numeric",
             hour: "numeric",
@@ -123,12 +129,6 @@ export default function StudentPet() {
         });
     };
 
-    const addMessage = (text) => {
-        setMessages((prev) => [
-            ...prev.slice(-19),
-            { id: Date.now(), text: `[${formatLogTime()}] ${text}`, }, 
-        ]);
-    };
 
     const tunerAccessories = ACCESSORY_SLOTS
         .map((slot) => {
@@ -224,19 +224,19 @@ export default function StudentPet() {
     }, []);
 
     useEffect(() => {
-        const storedMessages = localStorage.getItem("petMessages");
-        if (storedMessages) {
-            setMessages(JSON.parse(storedMessages));
-        }
-    }, []);
+        setMessages(pet?.activityLog ?? []);
+    }, [pet]);
 
     useEffect(() => {
-        localStorage.setItem("petMessages", JSON.stringify(messages));
-    }, [messages]);
+        if (!pet?._id) return;
+        setOwnedPets((prev) =>
+            prev.map((owned) => (owned._id === pet._id ? { ...owned, ...pet } : owned))
+        );
+    }, [pet]);
 
     useEffect(() => {
         if (logRef.current) {
-            logRef.current.scrollTop = logRef.current.scrollHeight;
+            logRef.current.scrollTop = 0;
         }
     }, [messages]);
 
@@ -301,15 +301,10 @@ export default function StudentPet() {
                     ? `Fed ${res.data.pet.name} (Free) • Hunger +${hungerIncrease}`
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ hunger: hungerIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${res.data.pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
             setFeedEffect("/assets/effects/PetFood.png");
             setTimeout(() => {
@@ -352,15 +347,10 @@ export default function StudentPet() {
                     ? `Played with ${res.data.pet.name} (Free) • Happiness +${happinessIncrease}`
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ happiness: happinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
 
             setShowBall(true);
@@ -403,15 +393,10 @@ export default function StudentPet() {
                     ? `Brushed ${res.data.pet.name} (Free) • Cleanliness +${cleanlinessIncrease}`
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ cleanliness: cleanlinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
 
             setBrushEffect("/assets/effects/HairBrush.png");
@@ -495,11 +480,9 @@ export default function StudentPet() {
                 changes.defense = item.defenseValue;
             }
 
-            addMessage(messages.join(" • "));
 
             if (updatedPet.level > previousPet.level) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
             }
 
             showStatChanges(changes);
@@ -518,7 +501,6 @@ export default function StudentPet() {
 
             await fetchEquipment();
 
-            addMessage(res.data.message);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to equip item.");
         }
@@ -534,7 +516,6 @@ export default function StudentPet() {
             const res = await api.post("/api/inventory/unequip", { slot });
 
             await fetchEquipment();
-            addMessage(res.data.message);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to unequip item.");
         }
@@ -551,7 +532,6 @@ export default function StudentPet() {
             await fetchOwnedPets();
             await fetchEquipment();
 
-            addMessage(res.data.message);
             setActiveTab("care");
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to switch pet.");
@@ -1120,17 +1100,19 @@ export default function StudentPet() {
                     <div className="card shadow-sm p-4">
                         <h5 className="mb-2">Activity Log</h5>
 
-                        <textarea
-                            ref={logRef}
-                            className="form-control bg-light"
-                            value={
-                                messages.length === 0
-                                    ? "No recent activity."
-                                    : messages.map((msg) => msg.text).join("\n")
-                            }
-                            readOnly
-                            rows={5}
-                        />
+                        <div ref={logRef} className="activity-log">
+                            {messages.length === 0 ? (
+                                <p className="text-muted mb-0">No recent activity.</p>
+                            ) : (
+                                [...messages].reverse().map((msg, idx) => (
+                                    <div key={msg._id ?? idx} className={`activity-row activity-${msg.type ?? "neutral"}`}>
+                                        <i className={`bi ${LOG_ICONS[msg.type] ?? LOG_ICONS.neutral} me-2`} aria-hidden="true" />
+                                        <span className="activity-time">{formatLogTime(msg.at)}</span>
+                                        <span className="activity-text">{msg.text}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </>
             )}

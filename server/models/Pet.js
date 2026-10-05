@@ -72,6 +72,13 @@ const petSchema = new mongoose.Schema(
             min: 0,
         },
 
+        activityLog: [
+            {
+                text: { type: String, required: true },
+                type: { type: String, enum: ["reward", "cost", "neutral"], default: "neutral" },
+                at: { type: Date, default: Date.now },
+            },
+        ],
         lastUpdated: {
             type: Date,
             default: Date.now,

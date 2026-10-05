@@ -267,3 +267,46 @@ a.text-decoration-none.card:hover {
   color: var(--color-text);
   text-decoration: underline;
 }
+
+.activity-log {
+  max-height: 220px;
+  overflow-y: auto;
+  background-color: var(--color-parchment);
+  border: 1px solid var(--color-border);
+  border-radius: .375rem;
+  padding: .5rem .75rem;
+}
+
+.activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: .25rem;
+  padding: .15rem 0;
+  font-size: .875rem;
+  border-bottom: 1px solid rgba(0, 0, 0, .05);
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-time {
+  color: var(--color-text);
+  opacity: .6;
+  white-space: nowrap;
+  margin-right: .4rem;
+}
+
+.activity-reward i,
+.activity-reward .activity-text {
+  color: var(--color-green);
+}
+
+.activity-cost i,
+.activity-cost .activity-text {
+  color: var(--color-amber);
+}
+
+.activity-neutral i {
+  opacity: .4;
+}

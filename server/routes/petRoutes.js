@@ -7,6 +7,9 @@ const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
 const applyLevelUps = require("../utils/applyLevelUps");
+const logActivity = require("../utils/logActivity");
+
+const CARE_XP = 5;
 
 const getTodayDateKey = () => {
     return new Date().toISOString().split("T")[0];
@@ -146,10 +149,30 @@ router.post("/feed", protect, async (req, res) => {
             });
         }
 
+        const prevHunger = pet.hunger;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.hunger = Math.min(100, pet.hunger + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
+
+        const hungerGain = pet.hunger - prevHunger;
+        logActivity(
+            pet,
+            `Fed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Hunger +${hungerGain} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
 
         await pet.save();
         await log.save();
@@ -221,10 +244,30 @@ router.post("/play", protect, async (req, res) => {
             });
         }
 
+        const prevHappiness = pet.happiness;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.happiness = Math.min(100, pet.happiness + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
+
+        const happinessGain = pet.happiness - prevHappiness;
+        logActivity(
+            pet,
+            `Played with ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Happiness +${happinessGain} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
 
         await pet.save();
         await log.save();
@@ -296,10 +339,30 @@ router.post("/brush", protect, async (req, res) => {
             });
         }
 
+        const prevCleanliness = pet.cleanliness;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.cleanliness = Math.min(100, pet.cleanliness + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
+
+        const cleanlinessGain = pet.cleanliness - prevCleanliness;
+        logActivity(
+            pet,
+            `Brushed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Cleanliness +${cleanlinessGain} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
 
         await pet.save();
         await log.save();

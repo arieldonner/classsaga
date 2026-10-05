@@ -7,6 +7,7 @@ const { getMonster } = require("../config/monsters");
 const InventoryItem = require("../models/InventoryItem");
 const ShopItem = require("../models/ShopItem");
 const applyLevelUps = require("../utils/applyLevelUps");
+const logActivity = require("../utils/logActivity");
 
 const PET_BATTLE_HP = 50;
 
@@ -141,7 +142,20 @@ router.post("/attack", protect, async (req, res) => {
         if (petWon) {
             // XP reward
             pet.experience += 20;
+            const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
             const leveledUp = applyLevelUps(pet);
+
+            logActivity(pet, `${pet.name} defeated ${monster.name}! +20 XP`, "reward");
+
+            if (leveledUp) {
+                logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+                logActivity(
+                    pet,
+                    `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                    "reward"
+                );
+            }
+
             await pet.save();
 
             // Item drop - 70% consumable, 30% cosmetic
