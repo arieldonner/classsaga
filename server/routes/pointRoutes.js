@@ -138,13 +138,15 @@ router.get("/my-transactions", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can view transactions." });
         }
 
+        const limit = Math.min(Number(req.query.limit) || 10, 50);
+
         const transactions = await PointTransaction.find({
             student: req.user._id,
         })
             .populate("teacher", "name")
             .populate("classroom", "name")
             .sort({ createdAt: -1 })
-            .limit(10);
+            .limit(limit);
 
         res.json(transactions);
     } catch (err) {

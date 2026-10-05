@@ -38,7 +38,7 @@ export default function StudentDashboard() {
 
     const fetchTransactions = async () => {
         try {
-            const res = await api.get("/api/points/my-transactions");
+            const res = await api.get("/api/points/my-transactions?limit=25");
             setTransactions(res.data);
         } catch (err) {
             console.error("Failed to load transactions");
@@ -187,19 +187,35 @@ export default function StudentDashboard() {
                 ) : transactions.length === 0 ? (
                     <p className="mb-0">No recent activity yet. Complete actions or receive points to see updates here.</p>
                 ) : (
-                    <div className="list-group">
+                    <div className="activity-log">
                         {transactions.map((tx) => (
-                            <div key={tx._id} className="list-group-item">
-                            <div className="fw-semibold">
-                                {tx.amount > 0 ? `+${tx.amount}` : tx.amount} points
-                            </div>
+                            <div
+                                key={tx._id}
+                                className={`activity-row activity-${tx.amount > 0 ? "reward" : "cost"} align-items-start`}
+                            >
+                                <i
+                                    className={`bi ${tx.amount > 0 ? "bi-arrow-up-circle-fill" : "bi-dash-circle-fill"} me-2`}
+                                    aria-hidden="true"
+                                />
 
-                            <div className="text-muted">
-                                {tx.reason}
-                            </div>
-                            <small className="text-muted">
-                                {tx.classroom?.name || "Pet/Shop"} • {tx.teacher?.name || "System" } • {" "} {new Date(tx.createdAt).toLocaleString(undefined, {month: "short", day: "numeric", hour: "numeric", minute: "2-digit",})}
-                            </small>
+                                <div className="flex-grow-1">
+                                    <div>
+                                        <span className="activity-text fw-semibold">
+                                            {tx.amount > 0 ? `+${tx.amount}` : tx.amount} points
+                                        </span>
+                                        <span className="ms-2">{tx.reason}</span>
+                                    </div>
+
+                                    <small className="activity-meta">
+                                        {tx.classroom?.name || "Pet/Shop"} • {tx.teacher?.name || "System"} •{" "}
+                                        {new Date(tx.createdAt).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                        })}
+                                    </small>
+                                </div>
                             </div>
                         ))}
                     </div>

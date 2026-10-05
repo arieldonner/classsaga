@@ -310,3 +310,13 @@ a.text-decoration-none.card:hover {
 .activity-neutral i {
   opacity: .4;
 }
+
+.activity-meta {
+  display: block;
+  color: var(--color-text);
+  opacity: .6;
+}
+
+.activity-row.align-items-start {
+  align-items: flex-start;
+}
