@@ -267,8 +267,9 @@ export default function StudentPet() {
         }, [busy, tuning]);
 
     useEffect(() => {
-        if (busy) setFacing(artFacing);
-    }, [busy, artFacing]);
+        if (busy) setFacing("left");
+    }, [busy]);
+
 
     const handleFeed = async () => {
         setActionError("");

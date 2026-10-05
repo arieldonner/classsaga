@@ -82,7 +82,7 @@ const items = [
         animationType: "none",
         offsetX: "0%",
         offsetY: "0%",
-        accessoryWidth: "50px",
+        accessoryWidth: "20%",
     },
     {
         _id: new mongoose.Types.ObjectId("69f275d2ab858f7ce4fbabe2"),

@@ -18,16 +18,18 @@ const PET_TYPES = {
             },
             accessoryOverrides: {
                 "Bow": {
-                    headTop:  { x: "41%", y: "30%", width: "18%" },
+                    headTop:  { x: "40.4%", y: "33.2%", width: "18%" },
                     headSide: { x: "55%", y: "36%", width: "18%" },
                 },
-                "Butterfly Pin": { 
+                "Butterfly Pin": {
+                    headTop:  { x: "44.3%", y: "42.1%", width: "60%" }, 
                     headSide: { x: "56.3%", y: "43.8%", width: "60%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "39.9%", y: "45.6%", width: "50%" }, 
                 },
                 "Phoenix Feather": {
+                    headTop: { x: "26.3%", y: "44.1%", width: "50%", flipX: true },
                     headSide: { x: "49.0%", y: "43.2%", width: "50%", flipX: true },
                 },
                 "Reading Glasses": {
@@ -63,12 +65,14 @@ const PET_TYPES = {
                     headSide: { x: "60.1%", y: "37.6%", width: "12%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "50.1%", y: "39.7%", width: "49%" },
                     headSide: { x: "64.6%", y: "44.4%", width: "49%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "46.0%", y: "43.5%", width: "60%" }, 
                 },
                 "Phoenix Feather": {
+                    headTop: { x: "45.7%", y: "39.4%", width: "42.5%", flipX: true },
                     headSide: { x: "56.3%", y: "45.6%", width: "42.5%", flipX: true },
                 },
                 "Reading Glasses": {
@@ -104,13 +108,15 @@ const PET_TYPES = {
                     headSide: { x: "53%", y: "29%", width: "18%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "70.1%", y: "23.2%", width: "49%" },
                     headSide: { x: "56.6%", y: "33.5%", width: "49%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "31.6%", y: "32.9%", width: "60%" }, 
                 },
                 "Phoenix Feather": {
-                    headSide: { x: "64.6%", y: "22.1%", width: "42.5%", flipX: true },
+                    headTop: { x: "64.6%", y: "22.1%", width: "42.5%", flipX: true },
+                    headSide: { x: "52.5%", y: "39.7%", width: "42.5%", flipX: true },
                 },
                 "Reading Glasses": {
                     eyes: { x: "23.4%", y: "26.5%", width: "100%" }
@@ -145,12 +151,14 @@ const PET_TYPES = {
                     headSide: { x: "37.6%", y: "43%", width: "18%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "53.7%", y: "43.5%", width: "70.5%" },
                     headSide: { x: "43.7%", y: "51.5%", width: "70.5%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "53.7%", y: "45.6%", width: "70%" }, 
                 },
                 "Phoenix Feather": {
+                    headTop: { x: "53.1%", y: "24.4%", width: "62%" },
                     headSide: { x: "43.1%", y: "43.5%", width: "62%" },
                 },
                 "Reading Glasses": {
@@ -187,13 +195,15 @@ const PET_TYPES = {
                     headSide: { x: "63%", y: "54.3%", width: "18%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "62.2%", y: "49.7%", width: "60%" },
                     headSide: { x: "68.1%", y: "64.7%", width: "60%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "44.9%", y: "65.3%", width: "63.5%" }, 
                 },
                 "Phoenix Feather": {
-                    headSide: { x: "59.6%", y: "37.4%", width: "54.5%", flipX: true },
+                    headTop: { x: "59.6%", y: "37.4%", width: "54.5%", flipX: true },
+                    headSide: { x: "59.6%", y: "60.6%", width: "54.5%", flipX: true },
                 },
                 "Reading Glasses": {
                     eyes: { x: "38.4%", y: "65.9%", width: "68.5%" }
@@ -228,12 +238,14 @@ const PET_TYPES = {
                     headSide: { x: "64%", y: "39.5%", width: "18%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "49.3%", y: "36.2%", width: "60%" },
                     headSide: { x: "67.2%", y: "48.5%", width: "60%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "42.8%", y: "52.6%", width: "100%" }, 
                 },
                 "Phoenix Feather": {
+                    headTop: { x: "37.8%", y: "37.6%", width: "54.5%", flipX: true },
                     headSide: { x: "65.7%", y: "46.5%", width: "54.5%", flipX: true },
                 },
                 "Reading Glasses": {
@@ -269,12 +281,14 @@ const PET_TYPES = {
                     headSide: { x: "50%", y: "33.8%", width: "18%" },
                 },
                 "Butterfly Pin": { 
+                    headTop: { x: "71.6%", y: "37.9%", width: "60%" },
                     headSide: { x: "56.3%", y: "43.8%", width: "60%" }, 
                 },
                 "Lightning Scar": { 
                     eyes: { x: "66.9%", y: "41.2%", width: "76%" }, 
                 },
                 "Phoenix Feather": {
+                    headTop: { x: "65.4%", y: "28.2%", width: "60%" },
                     headSide: { x: "55.7%", y: "43.5%", width: "60%" },
                 },
                 "Reading Glasses": {
