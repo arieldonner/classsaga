@@ -5,6 +5,8 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
+import AnchorTuner from "../../components/dev/AnchorTuner";
+
 
 const withRoam = (offset, roamX) => {
   if (!offset) return offset;
@@ -12,6 +14,48 @@ const withRoam = (offset, roamX) => {
   if (o.left)  o.left  = `calc(${o.left} + ${roamX}px)`;
   if (o.right) o.right = `calc(${o.right} - ${roamX}px)`;
   return o;
+};
+
+const addOffset = (base, delta) => {
+    const d = String(delta ?? "0%").trim();
+    return d.startsWith("-")
+        ? `calc(${base} - ${d.slice(1)})`
+        : `calc(${base} + ${d})`;
+};
+
+const ACCESSORY_SLOTS = ["headSide", "headTop", "eyes"];
+const SLOT_ORDER = ["background", "headTop", "headSide", "eyes"];
+const SLOT_LABELS = {
+    background: "Background",
+    headSide: "Side",
+    headTop: "Head",
+    eyes: "Face",
+};
+
+const resolveAccessory = (item, offsets, slot) => {
+    if (!item || !slot) return undefined;
+
+    const tuned = offsets?.accessoryOverrides?.[item.name]?.[slot];
+
+    if (tuned) {
+        return {
+            left: tuned.x,
+            top: tuned.y,
+            width: tuned.width,
+            translate: "-50% -50%",
+            transform: tuned.flipX ? "scaleX(-1)" : undefined,
+        };
+    }
+
+    const anchor = offsets?.anchors?.[slot];
+    if (!anchor) return undefined;
+
+    return {
+        left: addOffset(anchor.x, item.offsetX),
+        top: addOffset(anchor.y, item.offsetY),
+        width: item.accessoryWidth ?? "20%",
+        translate: "-50% -50%",
+    };
 };
 
 export default function StudentPet() {
@@ -45,6 +89,7 @@ export default function StudentPet() {
     const [travelDur, setTravelDur] = useState(1.1);
 
     const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
+    const [tuning, setTuning] = useState(false);
     const flipped = (facing === "right") !== (artFacing === "right");
 
     const ROAM_RANGE = 140;   // px each side of center
@@ -68,9 +113,6 @@ export default function StudentPet() {
         ? { backgroundImage: `url(${bgKey})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
         : { background: "var(--color-panel)" };
 
-
-    const accessory = equipment.accessory?.shopItem;
-
     const formatLogTime = () => {
         return new Date().toLocaleString(undefined, {
             month: "short",
@@ -86,6 +128,27 @@ export default function StudentPet() {
             { id: Date.now(), text: `[${formatLogTime()}] ${text}`, }, 
         ]);
     };
+
+    const tunerAccessories = ACCESSORY_SLOTS
+        .map((slot) => {
+            const item = equipment[slot]?.shopItem;
+            if (!item) return null;
+
+            const tuned = animationOffsets?.accessoryOverrides?.[item.name]?.[slot];
+            const anchor = animationOffsets?.anchors?.[slot];
+
+            return {
+                slot,
+                name: item.name,
+                imageKey: item.imageKey,
+                start: tuned ?? {
+                    x: anchor?.x ?? "50%",
+                    y: anchor?.y ?? "30%",
+                    width: item.accessoryWidth ?? "20%",
+                },
+            };
+        })
+        .filter(Boolean);
 
     const fetchInventory = async () => {
         try {
@@ -120,12 +183,6 @@ export default function StudentPet() {
         } catch (err) {
             console.error("Failed to load equipment");
         }
-    };
-
-    const isItemEquipped = (inventoryItem) => {
-        return Object.values(equipment).some(
-            (eq) => eq?.shopItem?._id === inventoryItem.shopItem?._id
-        );
     };
 
     const fetchPet = async () => {
@@ -183,7 +240,7 @@ export default function StudentPet() {
     }, [messages]);
 
     useEffect(() => {
-        if (busy) { setTraveling(false); return; }
+        if (busy || tuning) { setTraveling(false); return; }
         let nextId, travelId;
 
         const schedule = () => {
@@ -207,11 +264,12 @@ export default function StudentPet() {
 
         schedule();
         return () => { clearTimeout(nextId); clearTimeout(travelId); };
-        }, [busy]);
+        }, [busy, tuning]);
 
     useEffect(() => {
-        if (busy) setFacing(artFacing);
-    }, [busy, artFacing]);
+        if (busy) setFacing("left");
+    }, [busy]);
+
 
     const handleFeed = async () => {
         setActionError("");
@@ -450,10 +508,11 @@ export default function StudentPet() {
         }
     };
 
-    const handleEquipItem = async (inventoryItem) => {
+    const handleEquipItem = async (inventoryItem, slot) => {
         try {
             const res = await api.post("/api/inventory/equip", {
                 inventoryItemId: inventoryItem._id,
+                slot,
             });
 
             await fetchEquipment();
@@ -463,6 +522,9 @@ export default function StudentPet() {
             setActionError(err.response?.data?.message || "Failed to equip item.");
         }
     };
+
+    const slotOfItem = (shopItemId) =>
+        SLOT_ORDER.find((s) => equipment[s]?.shopItem?._id === shopItemId);
 
     const handleUnequipItem = async (slot) => {
         setActionError("");
@@ -538,51 +600,25 @@ export default function StudentPet() {
                                 <div className="pet-scene-wrapper position-relative">
                                     {activeTab === "inventory" && (
                                         <div className="equipment-slots">
-                                            <div
-                                                className={`equipment-slot ${equipment.background ? "filled" : ""}`}
-                                                onClick={() =>
-                                                    equipment.background && handleUnequipItem("background")
-                                                }
-                                            >
-                                                <div className="slot-icon">
-                                                    {equipment.background?.shopItem?.imageKey && (
-                                                        <img
-                                                            src={equipment.background.shopItem.imageKey}
-                                                            alt={equipment.background.shopItem.name}
-                                                            className="slot-img"
-                                                        />
-                                                    )}
+                                            {SLOT_ORDER.map((slot) => (
+                                                <div
+                                                    key={slot}
+                                                    className={`equipment-slot ${equipment[slot] ? "filled" : ""}`}
+                                                    onClick={() => equipment[slot] && handleUnequipItem(slot)}
+                                                >
+                                                    <div className="slot-icon">
+                                                        {equipment[slot]?.shopItem?.imageKey && (
+                                                            <img
+                                                                src={equipment[slot].shopItem.imageKey}
+                                                                alt={equipment[slot].shopItem.name}
+                                                                className="slot-img"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className="slot-label">{SLOT_LABELS[slot]}</div>
+                                                    <div className="slot-value">{equipment[slot]?.shopItem?.name || "Empty"}</div>
                                                 </div>
-
-                                                <div className="slot-label">Background</div>
-
-                                                <div className="slot-value">
-                                                    {equipment.background?.shopItem?.name || "Empty"}
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                className={`equipment-slot ${equipment.accessory ? "filled" : ""}`}
-                                                onClick={() =>
-                                                    equipment.accessory && handleUnequipItem("accessory")
-                                                }
-                                            >
-                                                <div className="slot-icon">
-                                                    {equipment.accessory?.shopItem?.imageKey && (
-                                                        <img
-                                                            src={equipment.accessory.shopItem.imageKey}
-                                                            alt={equipment.accessory.shopItem.name}
-                                                            className="slot-img"
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                <div className="slot-label">Accessory</div>
-
-                                                <div className="slot-value">
-                                                    {equipment.accessory?.shopItem?.name || "Empty"}
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     )}
                                     <div
@@ -593,13 +629,13 @@ export default function StudentPet() {
                                             className={`pet-roamer ${traveling && !busy ? "traveling" : ""}`}
                                             style={{
                                                 "--travel-dur": `${travelDur}s`,
-                                                translate: `${roamX}px 0`,
-                                                scale: flipped ? "-1 1" : "1 1",
+                                                translate: tuning ? "0px 0" : `${roamX}px 0`,
+                                                scale:     tuning ? "1 1"   : (flipped ? "-1 1" : "1 1"),
                                             }}
                                         >
                                             <div className="pet-shadow" style={animationOffsets?.shadow} />
                                             <div className={`pet-container ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
-                                                <div className="pet-sprite pet-idle">
+                                                <div className={`pet-sprite ${tuning ? "" : "pet-idle"}`}>
                                                     <img
                                                         src={`/assets/pets/${pet.species}.png`}
                                                         alt="Pet"
@@ -607,12 +643,25 @@ export default function StudentPet() {
                                                         style={{ maxHeight: "340px" }}
                                                     />
 
-                                                    {accessory?.imageKey && (
-                                                        <img
-                                                            src={accessory.imageKey}
-                                                            alt={accessory.name}
-                                                            className="pet-accessory"
-                                                            style={animationOffsets?.accessories?.[accessory?.name]}
+                                                    {!tuning && ACCESSORY_SLOTS.map((slot) => {
+                                                        const item = equipment[slot]?.shopItem;
+                                                        if (!item?.imageKey) return null;
+                                                        return (
+                                                            <img
+                                                                key={slot}
+                                                                src={item.imageKey}
+                                                                alt={item.name}
+                                                                className="pet-accessory"
+                                                                style={resolveAccessory(item, animationOffsets, slot)}
+                                                            />
+                                                        );
+                                                    })}
+                                                    {import.meta.env.DEV && (
+                                                        <AnchorTuner
+                                                            anchors={animationOffsets?.anchors}
+                                                            species={pet.species}
+                                                            onVisibilityChange={setTuning}
+                                                            accessories={tunerAccessories}
                                                         />
                                                     )}
                                                 </div>
@@ -952,7 +1001,7 @@ export default function StudentPet() {
                                                                         )}
                                                                     </>
                                                                 ) : (
-                                                                    <div>{item.equipSlot}</div>
+                                                                    <div>{item.equipSlots?.join(", ")}</div>
                                                                 )}
                                                             </div>
 
@@ -966,23 +1015,43 @@ export default function StudentPet() {
                                                                     </button>
                                                                 )}
 
-                                                                {item.itemType === "cosmetic" && (
-                                                                    isItemEquipped(inv) ? (
-                                                                        <button
-                                                                            className="btn btn-sm btn-outline-danger w-100"
-                                                                            onClick={() => handleUnequipItem(item.equipSlot)}
-                                                                        >
-                                                                            Unequip
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button
-                                                                            className="btn btn-sm btn-outline-primary w-100"
-                                                                            onClick={() => handleEquipItem(inv)}
-                                                                        >
-                                                                            Equip
-                                                                        </button>
-                                                                    )
-                                                                )}
+                                                                {item.itemType === "cosmetic" && (() => {
+                                                                    const current = slotOfItem(item._id);
+
+                                                                    if (!current) {
+                                                                        return item.equipSlots?.map((slot) => (
+                                                                            <button
+                                                                                key={slot}
+                                                                                className="btn btn-sm btn-outline-primary w-100 mb-1"
+                                                                                onClick={() => handleEquipItem(inv, slot)}
+                                                                            >
+                                                                                {item.equipSlots.length > 1 ? `Equip · ${SLOT_LABELS[slot]}` : "Equip"}
+                                                                            </button>
+                                                                        ));
+                                                                    }
+
+                                                                    return (
+                                                                        <>
+                                                                            {item.equipSlots
+                                                                                ?.filter((slot) => slot !== current)
+                                                                                .map((slot) => (
+                                                                                    <button
+                                                                                        key={slot}
+                                                                                        className="btn btn-sm btn-outline-primary w-100 mb-1"
+                                                                                        onClick={() => handleEquipItem(inv, slot)}
+                                                                                    >
+                                                                                        Move · {SLOT_LABELS[slot]}
+                                                                                    </button>
+                                                                                ))}
+                                                                            <button
+                                                                                className="btn btn-sm btn-outline-danger w-100"
+                                                                                onClick={() => handleUnequipItem(current)}
+                                                                            >
+                                                                                Unequip
+                                                                            </button>
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </div>
                                                     );

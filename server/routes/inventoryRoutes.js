@@ -8,6 +8,8 @@ const ShopItem = require("../models/ShopItem");
 const PetEquipment = require("../models/PetEquipment");
 const applyLevelUps = require("../utils/applyLevelUps");
 
+const EQUIP_SLOTS = ["background", "headTop", "headSide", "eyes"];
+
 // Get current student's inventory
 router.get("/my-items", protect, async (req, res) => {
     try {
@@ -140,9 +142,16 @@ router.post("/equip", protect, async (req, res) => {
             return res.status(400).json({ message: "Only cosmetic items can be equipped." });
         }
 
-        if (!item.equipSlot || item.equipSlot === "none") {
+        if (!item.equipSlots?.length) {
             return res.status(400).json({ message: "This item cannot be equipped." });
         }
+
+        const slot = req.body.slot ?? item.equipSlots[0];
+
+        if (!item.equipSlots.includes(slot)) {
+            return res.status(400).json({ message: "This item cannot go in that slot." });
+        }
+
 
         const pet = await Pet.findOne({
             student: req.user._id,
@@ -153,16 +162,23 @@ router.post("/equip", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        await PetEquipment.deleteMany({
+            student: req.user._id,
+            pet: pet._id,
+            shopItem: item._id,
+            slot: { $ne: slot },
+        });
+
         const equipment = await PetEquipment.findOneAndUpdate(
             {
                 student: req.user._id,
                 pet: pet._id,
-                slot: item.equipSlot,
+                slot,
             },
             {
                 student: req.user._id,
                 pet: pet._id,
-                slot: item.equipSlot,
+                slot,
                 shopItem: item._id,
             },
             {
@@ -205,7 +221,9 @@ router.get("/equipment", protect, async (req, res) => {
         // Normalize into a slot map for easy UI use
         const slots = {
             background: null,
-            accessory: null,
+            headTop: null,
+            headSide: null,
+            eyes: null,
         };
 
         equipment.forEach((eq) => {
@@ -227,7 +245,7 @@ router.post("/unequip", protect, async (req, res) => {
 
         const { slot } = req.body;
 
-        if (!slot || !["background", "accessory"].includes(slot)) {
+        if (!slot || !EQUIP_SLOTS.includes(slot)) {
             return res.status(400).json({ message: "Valid equipment slot is required." });
         }
 

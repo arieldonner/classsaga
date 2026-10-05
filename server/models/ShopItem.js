@@ -22,11 +22,6 @@ const shopItemSchema = new mongoose.Schema(
             enum: ["consumable", "cosmetic", "pet"],
             required: true,
         },
-        equipSlot: {
-            type: String,
-            enum: ["none", "background", "accessory"],
-            default: "none",
-        },
         cost: {
             type: Number,
             required: true,
@@ -78,6 +73,19 @@ const shopItemSchema = new mongoose.Schema(
         animationType: {
             type: String,
             default: "none",
+        },
+        equipSlots: {
+            type: [String],
+            default: [],
+        },
+        offsetX: { 
+            type: String, default: "0%"  
+        },
+        offsetY: { 
+            type: String, default: "0%"  
+        },
+        accessoryWidth: { 
+            type: String, default: "50px" 
         },
     },
     { timestamps: true }

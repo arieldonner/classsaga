@@ -14,7 +14,7 @@ const petEquipmentSchema = new mongoose.Schema(
         },
         slot: {
             type: String,
-            enum: ["background", "accessory"],
+            enum: ["background", "headTop", "headSide", "eyes"],
             required: true,
         },
         shopItem: {

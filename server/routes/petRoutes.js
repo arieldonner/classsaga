@@ -415,12 +415,26 @@ router.patch("/:petId/activate", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const outgoing = await Pet.findOne({ student: req.user._id, isActive: true });
+
+        if (outgoing && !outgoing._id.equals(pet._id)) {
+            if (applyPetDecay(outgoing)) {
+                await outgoing.save();
+            }
+        }
+
         await Pet.updateMany(
             { student: req.user._id, _id: { $ne: pet._id } },
             { isActive: false }
         );
 
-        await Pet.updateOne({ _id: pet._id }, { isActive: true });
+        await Pet.updateOne(
+            { _id: pet._id },
+            { isActive: true, lastUpdated: new Date() }
+        );
+
+        pet.isActive = true;
+        pet.lastUpdated = new Date();
 
         res.json({
             message: `${pet.name} is now active.`,
