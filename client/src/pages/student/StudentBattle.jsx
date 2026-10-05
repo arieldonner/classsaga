@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentBattle.css";
+import StatIcon from "../../components/StatIcon";
 
 export default function StudentBattle() {
     const [battleStatus, setBattleStatus] = useState(null);
@@ -294,9 +295,9 @@ export default function StudentBattle() {
                                 <div className="card shadow-sm p-4">
                                     <h5 className="mb-3">Your Pet's Battle Stats</h5>
                                     <div className="d-flex gap-4">
-                                        <div><span className="fw-semibold">STR:</span> {pet.strength}</div>
-                                        <div><span className="fw-semibold">SPD:</span> {pet.speed}</div>
-                                        <div><span className="fw-semibold">DEF:</span> {pet.defense}</div>
+                                        <div><StatIcon kind="str" /><span className="fw-semibold">STR:</span> {pet.strength}</div>
+                                        <div><StatIcon kind="spd" /><span className="fw-semibold">SPD:</span> {pet.speed}</div>
+                                        <div><StatIcon kind="def" /><span className="fw-semibold">DEF:</span> {pet.defense}</div>
                                     </div>
                                 </div>
                             </div>
@@ -304,8 +305,8 @@ export default function StudentBattle() {
                                 <div className="card shadow-sm p-4">
                                     <h5 className="mb-3">Monster Stats</h5>
                                     <div className="d-flex gap-4">
-                                        <div><span className="fw-semibold">STR:</span> {battleStatus.monster.attack}</div>
-                                        <div><span className="fw-semibold">DEF:</span> {battleStatus.monster.defense}</div>
+                                        <div><StatIcon kind="str" /><span className="fw-semibold">STR:</span> {battleStatus.monster.attack}</div>
+                                        <div><StatIcon kind="def" /><span className="fw-semibold">DEF:</span> {battleStatus.monster.defense}</div>
                                     </div>
                                 </div>
                             </div>

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
 import AnchorTuner from "../../components/dev/AnchorTuner";
+import StatIcon from "../../components/StatIcon";
 
 
 const withRoam = (offset, roamX) => {
@@ -815,21 +816,21 @@ export default function StudentPet() {
 
                                             <div className="d-flex gap-4 flex-wrap">
                                                 <div>
-                                                    <span className="fw-semibold">STR:</span> {pet.strength}
+                                                    <StatIcon kind="str" /><span className="fw-semibold">STR:</span> {pet.strength}
                                                     {statChanges.strength && (
                                                         <span className="text-success ms-2">+{statChanges.strength}</span>
                                                     )}
                                                 </div>
 
                                                 <div>
-                                                    <span className="fw-semibold">SPD:</span> {pet.speed}
+                                                    <StatIcon kind="spd" /><span className="fw-semibold">SPD:</span> {pet.speed}
                                                     {statChanges.speed && (
                                                         <span className="text-success ms-2">+{statChanges.speed}</span>
                                                     )}
                                                 </div>
 
                                                 <div>
-                                                    <span className="fw-semibold">DEF:</span> {pet.defense}
+                                                    <StatIcon kind="def" /><span className="fw-semibold">DEF:</span> {pet.defense}
                                                     {statChanges.defense && (
                                                         <span className="text-success ms-2">+{statChanges.defense}</span>
                                                     )}
