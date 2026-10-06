@@ -100,6 +100,30 @@ export default function StudentDashboard() {
                 <h2>Student Dashboard</h2>
             </div>
 
+            {pet?.studentLevel && (
+                <div className="card shadow-sm p-3 mb-4">
+                    <label className="form-label fw-semibold mb-1">
+                        Student Level {pet.studentLevel.level}{" "}
+                        <span className="text-muted fw-normal">
+                            (XP {pet.studentLevel.xpIntoLevel} / {pet.studentLevel.xpForNext})
+                        </span>
+                    </label>
+
+                    <div className="progress">
+                        <div
+                            className="progress-bar bg-info"
+                            role="progressbar"
+                            style={{ width: `${pet.studentLevel.xpIntoLevel}%` }}
+                            aria-valuenow={pet.studentLevel.xpIntoLevel}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                        >
+                            {pet.studentLevel.xpIntoLevel}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {loginBonus && (
                 <div className="alert alert-success d-flex justify-content-between align-items-center">
                     <span>+{loginBonus.points} points for logging in today! {loginBonus.message}</span>

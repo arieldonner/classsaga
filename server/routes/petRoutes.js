@@ -8,6 +8,7 @@ const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
 const applyLevelUps = require("../utils/applyLevelUps");
 const logActivity = require("../utils/logActivity");
+const getStudentLevel = require("../utils/getStudentLevel");
 
 const CARE_XP = 5;
 
@@ -66,13 +67,29 @@ router.get("/my-pet", protect, async (req, res) => {
 
         const petType = PET_TYPES[pet.species];
 
+        const studentLevel = await getStudentLevel(req.user._id);
+
         res.json({
             ...pet.toObject(),
+            studentLevel,
             animationOffsets: petType?.animationOffsets || {},
             artFacing: petType?.artFacing || "left",
         });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch pet." });
+    }
+});
+
+// Student level derived from all owned pets
+router.get("/my-level", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students have a level." });
+        }
+
+        res.json(await getStudentLevel(req.user._id));
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch student level." });
     }
 });
 

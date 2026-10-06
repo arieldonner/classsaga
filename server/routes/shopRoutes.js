@@ -8,6 +8,7 @@ const PointTransaction = require("../models/PointTransaction");
 const User = require("../models/User");
 const PET_TYPES = require("../config/petTypes");
 const { protect } = require("../middleware/authMiddleware");
+const getStudentLevel = require("../utils/getStudentLevel");
 
 // Get available shop items
 router.get("/items", protect, async (req, res) => {
@@ -22,9 +23,11 @@ router.get("/items", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const { level: studentLevel } = await getStudentLevel(req.user._id);
+
         const items = await ShopItem.find({
             isActive: true,
-            unlockLevel: { $lte: pet.level },
+            unlockLevel: { $lte: studentLevel },
         }).sort({ category: 1, cost: 1 });
 
         res.json(items);
@@ -62,7 +65,9 @@ router.post("/buy", protect, async (req, res) => {
             return res.status(404).json({ message: "Item not found." });
         }
 
-        if (pet.level < item.unlockLevel) {
+        const { level: studentLevel } = await getStudentLevel(req.user._id);
+
+        if (studentLevel < item.unlockLevel) {
             return res.status(403).json({ message: "This item is not unlocked yet." });
         }
 

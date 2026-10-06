@@ -16,6 +16,7 @@ export default function StudentShop() {
     const [ownedPets, setOwnedPets] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [buyingId, setBuyingId] = useState(null);
+    const [studentLevel, setStudentLevel] = useState(null);
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -25,6 +26,9 @@ export default function StudentShop() {
 
                 const inventoryRes = await api.get("/api/inventory/my-items");
                 setInventory(inventoryRes.data);
+
+                const levelRes = await api.get("/api/pets/my-level");
+                setStudentLevel(levelRes.data);
             } catch (err) {
                 setError(err.response?.data?.message || "Failed to load shop.");
             } finally {
@@ -110,7 +114,10 @@ export default function StudentShop() {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="mb-1">Shop</h2>
-                    <p className="mb-0 text-muted">Points: {currentPoints}</p>
+                    <p className="mb-0 text-muted">
+                        {studentLevel && <>Student Level {studentLevel.level} • </>}
+                        Points: {currentPoints}
+                    </p>
                 </div>
 
                 <Link to="/student" className="btn btn-outline-secondary">
