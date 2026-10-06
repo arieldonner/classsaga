@@ -10,7 +10,7 @@ export default function StudentShop() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
+    const [purchase, setPurchase] = useState(null);
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const [inventory, setInventory] = useState([]);
     const [ownedPets, setOwnedPets] = useState([]);
@@ -48,6 +48,18 @@ export default function StudentShop() {
             fetchPets();
         }, []);
 
+    const isOwnedPermanently = (item) => {
+        if (item.itemType === "pet") {
+            return ownedPets.some((p) => p.species === item.petSpecies);
+        }
+
+        if (item.itemType === "cosmetic") {
+            return (getInventoryForItem(item._id)?.quantity || 0) > 0;
+        }
+
+        return false;
+    };
+
     const getInventoryForItem = (itemId) => {
         return inventory.find((inv) => inv.shopItem?._id === itemId);
     };
@@ -66,7 +78,6 @@ export default function StudentShop() {
         if (buyingId) return;
 
         setError("");
-        setMessage("");
         setBuyingId(shopItemId);
 
         try {
@@ -80,7 +91,13 @@ export default function StudentShop() {
                 await fetchInventory();
             }
 
-            setMessage(res.data.message || "Purchase successful.");
+            const bought = items.find((i) => i._id === shopItemId);
+            setPurchase({
+                name: bought?.name || "Item",
+                imageKey: bought?.imageKey,
+                message: res.data.message || "Purchase successful.",
+            });
+            setTimeout(() => setPurchase(null), 2600);
         } catch (err) {
             setError(err.response?.data?.message || "Failed to buy item.");
         } finally {
@@ -101,10 +118,22 @@ export default function StudentShop() {
                 </Link>
             </div>
 
+            {purchase && (
+                <div className="purchase-popup" onClick={() => setPurchase(null)}>
+                    <div className="purchase-card">
+                        {purchase.imageKey && (
+                            <img src={purchase.imageKey} alt={purchase.name} className="purchase-img" />
+                        )}
+                        <div className="purchase-title">{purchase.name}</div>
+                        <div className="purchase-sub">{purchase.message}</div>
+                    </div>
+                </div>
+            )}
+
             {loading && <p>Loading shop...</p>}
 
             {error && <div className="alert alert-danger">{error}</div>}
-            {message && <div className="alert alert-success">{message}</div>}
+
 
             <div className="btn-group btn-group-sm mb-3">
                 {["all", "food", "toy", "care", "accessory", "background", "pet"].map((cat) => (
@@ -124,6 +153,8 @@ export default function StudentShop() {
                         <p>No items available yet.</p>
                     ) : (items
                         .filter(item => selectedCategory === "all" || item.category === selectedCategory)
+                        .slice()
+                        .sort((a, b) => Number(isOwnedPermanently(a)) - Number(isOwnedPermanently(b)))
                         .map((item) => {
                             const ownedItem = getInventoryForItem(item._id);
                             const ownedQuantity = ownedItem?.quantity || 0;
