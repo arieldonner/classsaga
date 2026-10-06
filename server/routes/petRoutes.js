@@ -100,33 +100,27 @@ router.post("/feed", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can feed pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -174,9 +168,7 @@ router.post("/feed", protect, async (req, res) => {
             );
         }
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,
@@ -195,33 +187,27 @@ router.post("/play", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can play with pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -269,9 +255,7 @@ router.post("/play", protect, async (req, res) => {
             );
         }
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,
@@ -290,33 +274,27 @@ router.post("/brush", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can brush pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -364,9 +342,7 @@ router.post("/brush", protect, async (req, res) => {
             );
         }
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,

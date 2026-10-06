@@ -97,6 +97,7 @@ export default function StudentPet() {
 
     const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
     const [tuning, setTuning] = useState(false);
+    const [pending, setPending] = useState(null);
     const flipped = (facing === "right") !== (artFacing === "right");
 
     const ROAM_RANGE = 140;   // px each side of center
@@ -273,6 +274,8 @@ export default function StudentPet() {
 
 
     const handleFeed = async () => {
+        if (pending === "feed") return;
+        setPending("feed");
         setActionError("");
 
         try {
@@ -315,10 +318,14 @@ export default function StudentPet() {
 
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
+        } finally {
+            setPending(null);
         }
     };
 
     const handlePlay = async () => {
+        if (pending === "play") return;
+        setPending("play");
         setActionError("");
 
         try {
@@ -361,10 +368,14 @@ export default function StudentPet() {
             }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
+        } finally {
+            setPending(null);
         }
     };
 
     const handleBrush = async () => {
+        if (pending === "brush") return;
+        setPending("brush");
         setActionError("");
 
         try {
@@ -407,6 +418,8 @@ export default function StudentPet() {
             }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
+        } finally {
+            setPending(null);
         }
     };
 
@@ -882,27 +895,33 @@ export default function StudentPet() {
                                             <button
                                                 className="btn btn-success"
                                                 onClick={handleFeed}
-                                                disabled={dailyStatus.feedUsed && currentPoints < 10}
+                                                disabled={pending === "feed" || (dailyStatus.feedUsed && currentPoints < 10)}
                                             >
-                                                <img src="/assets/effects/PetFood.png" alt="" className="btn-sprite" style={{ height: "32px" }} />
+                                                {pending === "feed"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/PetFood.png" alt="" className="btn-sprite" style={{ height: "32px" }} />}
                                                 {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
                                             </button>
 
                                             <button
                                                 className="btn btn-primary"
                                                 onClick={handlePlay}
-                                                disabled={dailyStatus.playUsed && currentPoints < 10}
+                                                disabled={pending === "play" || (dailyStatus.playUsed && currentPoints < 10)}
                                             >
-                                                <img src="/assets/effects/BallOfSlime.png" alt="" className="btn-sprite" style={{ height: "26px" }} />
+                                                {pending === "play"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/BallOfSlime.png" alt="" className="btn-sprite" style={{ height: "26px" }} />}
                                                 {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
                                             </button>
 
                                             <button
                                                 className="btn btn-secondary"
                                                 onClick={handleBrush}
-                                                disabled={dailyStatus.brushUsed && currentPoints < 10}
+                                                disabled={pending === "brush" || (dailyStatus.brushUsed && currentPoints < 10)}
                                             >
-                                                <img src="/assets/effects/HairBrush.png" alt="" className="btn-sprite" style={{ height: "22px" }} />
+                                                {pending === "brush"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/HairBrush.png" alt="" className="btn-sprite" style={{ height: "22px" }} />}
                                                 {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
                                             </button>
                                         </div>

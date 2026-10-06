@@ -15,6 +15,7 @@ export default function StudentShop() {
     const [inventory, setInventory] = useState([]);
     const [ownedPets, setOwnedPets] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [buyingId, setBuyingId] = useState(null);
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -62,8 +63,11 @@ export default function StudentShop() {
     };
 
     const handleBuy = async (shopItemId) => {
+        if (buyingId) return;
+
         setError("");
         setMessage("");
+        setBuyingId(shopItemId);
 
         try {
             const res = await api.post("/api/shop/buy", { shopItemId });
@@ -79,6 +83,8 @@ export default function StudentShop() {
             setMessage(res.data.message || "Purchase successful.");
         } catch (err) {
             setError(err.response?.data?.message || "Failed to buy item.");
+        } finally {
+            setBuyingId(null);
         }
     };
 
@@ -178,8 +184,11 @@ export default function StudentShop() {
                                             <button
                                                 className="btn btn-primary mt-auto w-100"
                                                 onClick={() => handleBuy(item._id)}
-                                                disabled={cannotAfford || alreadyOwned}
+                                                disabled={buyingId !== null || cannotAfford || alreadyOwned}
                                             >
+                                                {buyingId === item._id && (
+                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                )}
                                                 {alreadyOwned
                                                     ? "Owned"
                                                     : cannotAfford
