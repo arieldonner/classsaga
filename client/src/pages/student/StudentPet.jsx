@@ -884,6 +884,7 @@ export default function StudentPet() {
                                                 onClick={handleFeed}
                                                 disabled={dailyStatus.feedUsed && currentPoints < 10}
                                             >
+                                                <img src="/assets/effects/PetFood.png" alt="" className="btn-sprite" style={{ height: "32px" }} />
                                                 {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
                                             </button>
 
@@ -892,6 +893,7 @@ export default function StudentPet() {
                                                 onClick={handlePlay}
                                                 disabled={dailyStatus.playUsed && currentPoints < 10}
                                             >
+                                                <img src="/assets/effects/BallOfSlime.png" alt="" className="btn-sprite" style={{ height: "26px" }} />
                                                 {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
                                             </button>
 
@@ -900,6 +902,7 @@ export default function StudentPet() {
                                                 onClick={handleBrush}
                                                 disabled={dailyStatus.brushUsed && currentPoints < 10}
                                             >
+                                                <img src="/assets/effects/HairBrush.png" alt="" className="btn-sprite" style={{ height: "22px" }} />
                                                 {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
                                             </button>
                                         </div>

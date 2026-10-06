@@ -123,6 +123,12 @@ router.post("/use", protect, async (req, res) => {
             if (gain > 0) useParts.push(`${USE_LABELS[field]} +${gain}`);
         });
 
+        const CARE_FIELDS = ["hunger", "happiness", "cleanliness"];
+
+        if (CARE_FIELDS.includes(item.effectType) && pet[item.effectType] === beforeUse[item.effectType]) {
+            useParts.push(`${USE_LABELS[item.effectType]} already full`);
+        }
+
         if (item.xpValue) useParts.push(`XP +${item.xpValue}`);
 
         logActivity(pet, useParts.join(" • "), "reward");

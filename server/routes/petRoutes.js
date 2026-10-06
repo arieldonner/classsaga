@@ -161,7 +161,7 @@ router.post("/feed", protect, async (req, res) => {
         const hungerGain = pet.hunger - prevHunger;
         logActivity(
             pet,
-            `Fed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Hunger +${hungerGain} • XP +${CARE_XP}`,
+            `Fed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${hungerGain > 0 ? `Hunger +${hungerGain}` : "Hunger already full"} • XP +${CARE_XP}`,
             actionType === "paid" ? "cost" : "reward"
         );
 
@@ -256,7 +256,7 @@ router.post("/play", protect, async (req, res) => {
         const happinessGain = pet.happiness - prevHappiness;
         logActivity(
             pet,
-            `Played with ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Happiness +${happinessGain} • XP +${CARE_XP}`,
+            `Played with ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${happinessGain > 0 ? `Happiness +${happinessGain}` : "Happiness already full"} • XP +${CARE_XP}`,
             actionType === "paid" ? "cost" : "reward"
         );
 
@@ -351,7 +351,7 @@ router.post("/brush", protect, async (req, res) => {
         const cleanlinessGain = pet.cleanliness - prevCleanliness;
         logActivity(
             pet,
-            `Brushed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • Cleanliness +${cleanlinessGain} • XP +${CARE_XP}`,
+            `Brushed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${cleanlinessGain > 0 ? `Cleanliness +${cleanlinessGain}` : "Cleanliness already full"} • XP +${CARE_XP}`,
             actionType === "paid" ? "cost" : "reward"
         );
 

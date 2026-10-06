@@ -320,3 +320,10 @@ a.text-decoration-none.card:hover {
 .activity-row.align-items-start {
   align-items: flex-start;
 }
+
+.btn-sprite {
+  width: auto;
+  margin-right: .5rem;
+  vertical-align: middle;
+  pointer-events: none;
+}
