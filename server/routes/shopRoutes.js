@@ -49,9 +49,12 @@ router.post("/buy", protect, async (req, res) => {
             return res.status(400).json({ message: "Shop item is required." });
         }
 
-        const student = await User.findById(req.user._id);
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
-        const item = await ShopItem.findById(shopItemId);
+        const [student, pet, item, { level: studentLevel }] = await Promise.all([
+            User.findById(req.user._id),
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            ShopItem.findById(shopItemId),
+            getStudentLevel(req.user._id),
+        ]);
 
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
@@ -64,8 +67,6 @@ router.post("/buy", protect, async (req, res) => {
         if (!item || !item.isActive) {
             return res.status(404).json({ message: "Item not found." });
         }
-
-        const { level: studentLevel } = await getStudentLevel(req.user._id);
 
         if (studentLevel < item.unlockLevel) {
             return res.status(403).json({ message: "This item is not unlocked yet." });
@@ -98,15 +99,17 @@ router.post("/buy", protect, async (req, res) => {
                 isActive: false,
             });
 
-            await PointTransaction.create({
-                student: student._id,
-                amount: -item.cost,
-                reason: `Purchased pet: ${item.name}`,
-                type: "spend",
-            });
-
             student.points -= item.cost;
-            await student.save();
+
+            await Promise.all([
+                PointTransaction.create({
+                    student: student._id,
+                    amount: -item.cost,
+                    reason: `Purchased pet: ${item.name}`,
+                    type: "spend",
+                }),
+                student.save(),
+            ]);
 
             return res.status(201).json({
                 message: "Pet purchased successfully.",
@@ -122,29 +125,32 @@ router.post("/buy", protect, async (req, res) => {
             shopItem: item._id,
         });
 
-        if (inventoryItem) {
-            if (item.itemType === "cosmetic") {
-                return res.status(400).json({ message: "You already own this item." });
-            }
-
-            inventoryItem.quantity += 1;
-            await inventoryItem.save();
-        } else {
-            inventoryItem = await InventoryItem.create({
-                student: student._id,
-                shopItem: item._id,
-                quantity: 1,
-            });
+        if (inventoryItem && item.itemType === "cosmetic") {
+            return res.status(400).json({ message: "You already own this item." });
         }
 
-        await PointTransaction.create({
+        const transaction = PointTransaction.create({
             student: student._id,
             amount: -item.cost,
             reason: `Purchased ${item.name}`,
             type: "spend",
         });
 
-        await student.save();
+        if (inventoryItem) {
+            inventoryItem.quantity += 1;
+            await Promise.all([inventoryItem.save(), transaction, student.save()]);
+        } else {
+            const [created] = await Promise.all([
+                InventoryItem.create({
+                    student: student._id,
+                    shopItem: item._id,
+                    quantity: 1,
+                }),
+                transaction,
+                student.save(),
+            ]);
+            inventoryItem = created;
+        }
 
         res.status(201).json({
             message: "Item purchased successfully.",
