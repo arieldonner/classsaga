@@ -72,6 +72,7 @@ router.get("/my-pet", protect, async (req, res) => {
         res.json({
             ...pet.toObject(),
             studentLevel,
+            hurtAdjust: petType?.hurtAdjust || null,
             animationOffsets: petType?.animationOffsets || {},
             artFacing: petType?.artFacing || "left",
         });

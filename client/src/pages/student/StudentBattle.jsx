@@ -208,12 +208,21 @@ export default function StudentBattle() {
                                         <div className={petAttacking ? "pet-tackle" : ""}>
                                             <div className={petHurt ? "pet-hurt" : ""}>
                                                 <div
-                                                    style={{
-                                                        transform: pet.artFacing === "left" ? "scaleX(-1)" : "none",
-                                                        translate: groundShift(pet.animationOffsets),
-                                                        display: "inline-block",
-                                                        position: "relative",
-                                                    }}
+                                                    style={(() => {
+                                                        const hurting = petHurt && hurtSrc.pet;
+                                                        const adj = hurting ? pet.hurtAdjust : null;
+                                                        const facesLeft = (pet.artFacing === "left") !== Boolean(adj?.flipX);
+
+                                                        return {
+                                                            transform: facesLeft ? "scaleX(-1)" : "none",
+                                                            translate: adj?.groundY != null
+                                                                ? `0 ${(100 - adj.groundY).toFixed(1)}%`
+                                                                : groundShift(pet.animationOffsets),
+                                                            scale: adj?.scale ? String(adj.scale) : undefined,
+                                                            display: "inline-block",
+                                                            position: "relative",
+                                                        };
+                                                    })()}
                                                 >
                                                     <img
                                                         src={petHurt && hurtSrc.pet ? hurtSrc.pet : `/assets/pets/${pet.species}.png`}
@@ -222,19 +231,32 @@ export default function StudentBattle() {
                                                         style={{ maxHeight: "160px", objectFit: "contain", display: "block" }}
                                                     />
 
-                                                    {ACCESSORY_SLOTS.map((slot) => {
-                                                        const item = equipment[slot]?.shopItem;
-                                                        if (!item?.imageKey) return null;
-                                                        return (
-                                                            <img
-                                                                key={slot}
-                                                                src={item.imageKey}
-                                                                alt={item.name}
-                                                                className="pet-accessory"
-                                                                style={resolveAccessory(item, pet.animationOffsets, slot)}
-                                                            />
-                                                        );
-                                                    })}
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            inset: 0,
+                                                            // the wrapper mirrors to correct the hurt sprite's facing;
+                                                            // accessories were already correct, so undo it for them
+                                                            transform:
+                                                                petHurt && hurtSrc.pet && pet.hurtAdjust?.flipX
+                                                                    ? "scaleX(-1)"
+                                                                    : "none",
+                                                        }}
+                                                    >
+                                                        {ACCESSORY_SLOTS.map((slot) => {
+                                                            const item = equipment[slot]?.shopItem;
+                                                            if (!item?.imageKey) return null;
+                                                            return (
+                                                                <img
+                                                                    key={slot}
+                                                                    src={item.imageKey}
+                                                                    alt={item.name}
+                                                                    className="pet-accessory"
+                                                                    style={resolveAccessory(item, pet.animationOffsets, slot)}
+                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

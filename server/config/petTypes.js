@@ -47,6 +47,7 @@ const PET_TYPES = {
         species: "pengu",
         isStarter: true,
         artFacing: "left",
+        hurtAdjust: { groundY: 66.7, scale: 1.33 },
         animationOffsets: {
             feed:  { bottom: "90px", left: "32%" },
             brush: { bottom: "270px", right: "41%" },
@@ -90,6 +91,7 @@ const PET_TYPES = {
         species: "snazake",
         isStarter: true,
         artFacing: "left",
+        hurtAdjust: { groundY: 100, scale: 0.93, flipX: true },
         animationOffsets: {
             feed:  { bottom: "80px", left: "22%" },
             brush: { bottom: "310px", right: "42%" },
