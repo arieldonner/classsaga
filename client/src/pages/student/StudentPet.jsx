@@ -59,6 +59,7 @@ export default function StudentPet() {
     const [isEditingName, setIsEditingName] = useState(false);
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
+    const [celebrating, setCelebrating] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
     const [animationOffsets, setAnimationOffsets] = useState({});
     const [artFacing, setArtFacing] = useState("left");
@@ -533,7 +534,9 @@ export default function StudentPet() {
 
     const triggerLevelUp = () => {
         setShowLevelUp(true);
-        setTimeout(() => setShowLevelUp(false), 3000);
+        setCelebrating(true);
+        setTimeout(() => setCelebrating(false), 1400);
+        setTimeout(() => setShowLevelUp(false), 4500);
     };
 
     const statColor = (value) => {
@@ -597,7 +600,7 @@ export default function StudentPet() {
                                             }}
                                         >
                                             <div className="pet-shadow" style={animationOffsets?.shadow} />
-                                            <div className={`pet-container ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
+                                            <div className={`pet-container ${celebrating ? "celebrating" : ""} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
                                                 <div className={`pet-sprite ${tuning ? "" : "pet-idle"}`}>
                                                     <img
                                                         src={`/assets/pets/${pet.species}.png`}
@@ -665,7 +668,7 @@ export default function StudentPet() {
                                     />
                                 )}
                                 {showLevelUp && (
-                                    <div className="level-up-anim">Level Up!</div>
+                                    <div className="level-up-anim">Level {pet.level}!</div>
                                 )}
                                 </div>
                             </div>
