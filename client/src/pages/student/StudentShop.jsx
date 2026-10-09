@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import RewardPopup from "../../components/RewardPopup";
 import "./StudentShop.css";
 
 export default function StudentShop() {
@@ -126,15 +127,13 @@ export default function StudentShop() {
             </div>
 
             {purchase && (
-                <div className="purchase-popup" onClick={() => setPurchase(null)}>
-                    <div className="purchase-card">
-                        {purchase.imageKey && (
-                            <img src={purchase.imageKey} alt={purchase.name} className="purchase-img" />
-                        )}
-                        <div className="purchase-title">{purchase.name}</div>
-                        <div className="purchase-sub">{purchase.message}</div>
-                    </div>
-                </div>
+                <RewardPopup
+                    image={purchase.imageKey}
+                    imageAlt={purchase.name}
+                    title={purchase.name}
+                    subtitle={purchase.message}
+                    onClose={() => setPurchase(null)}
+                />
             )}
 
             {loading && <p>Loading shop...</p>}

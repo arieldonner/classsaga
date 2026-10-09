@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import RewardPopup from "../../components/RewardPopup";
 
 export default function StudentDashboard() {
     const [classrooms, setClassrooms] = useState([]);
@@ -16,6 +17,8 @@ export default function StudentDashboard() {
     const [loadingPet, setLoadingPet] = useState(true);
 
     const [loginBonus, setLoginBonus] = useState(null);
+    const [ownedPets, setOwnedPets] = useState([]);
+    const [greeter, setGreeter] = useState(null);
 
     const navigate = useNavigate();
 
@@ -72,6 +75,19 @@ export default function StudentDashboard() {
     }, []);
 
     useEffect(() => {
+        const fetchOwnedPets = async () => {
+            try {
+                const res = await api.get("/api/pets/my-pets");
+                setOwnedPets(res.data || []);
+            } catch (err) {
+                console.error("Failed to load pets");
+            }
+        };
+
+        fetchOwnedPets();
+    }, []);
+
+    useEffect(() => {
         const claimLoginBonus = async () => {
             try {
                 const res = await api.post("/api/points/daily-login");
@@ -93,6 +109,15 @@ export default function StudentDashboard() {
         if (value >= 30) return "#c8922a";
         return "#c0392b";
     };
+
+    useEffect(() => {
+        if (!loginBonus || !ownedPets.length) return;
+
+        const pick = ownedPets[Math.floor(Math.random() * ownedPets.length)];
+        const show = setTimeout(() => setGreeter(pick), 400);
+
+        return () => clearTimeout(show);
+    }, [loginBonus, ownedPets]);
 
     return (
         <div className="container py-4">
@@ -124,15 +149,18 @@ export default function StudentDashboard() {
                 </div>
             )}
 
-            {loginBonus && (
-                <div className="alert alert-success d-flex justify-content-between align-items-center">
-                    <span>+{loginBonus.points} points for logging in today! {loginBonus.message}</span>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setLoginBonus(null)}
-                    ></button>
-                </div>
+            {greeter && loginBonus && (
+                <RewardPopup
+                    image={`/assets/pets/${greeter.species}.png`}
+                    imageAlt={greeter.name}
+                    title={`+${loginBonus.points} Points`}
+                    subtitle={`${greeter.name} says: ${loginBonus.message}`}
+                    hint="Tap anywhere to continue"
+                    onClose={() => {
+                        setGreeter(null);
+                        setLoginBonus(null);
+                    }}
+                />
             )}
 
             <div className="row g-4 mb-4">

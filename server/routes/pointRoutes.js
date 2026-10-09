@@ -15,11 +15,15 @@ const getTodayDateKey = () => {
 const LOGIN_MESSAGES = [
     "Great to see you today!",
     "Ready for another day of adventure?",
-    "Your pet missed you!",
     "Keep up the great work!",
-    "Every day counts — welcome back!",
+    "Every day counts. Welcome back!",
     "You're on a roll!",
     "Let's make today a good one.",
+    "Good to see you again!",
+    "I think you're doing great.",
+    "Keep being awesome.",
+    "You've got this today.",
+    "I'm proud of you.",
 ];
 
 // Daily login
@@ -41,7 +45,7 @@ router.post("/daily-login", protect, async (req, res) => {
             return res.json({ claimed: false, studentPoints: req.user.points });
         }
 
-        const bonusAmount = 5;
+        const bonusAmount = 10;
 
         req.user.points += bonusAmount;
         await req.user.save();
