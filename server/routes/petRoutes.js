@@ -8,13 +8,11 @@ const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
 const applyLevelUps = require("../utils/applyLevelUps");
 const logActivity = require("../utils/logActivity");
+const getTodayDateKey = require("../utils/getTodayDateKey");
 const getStudentLevel = require("../utils/getStudentLevel");
 
 const CARE_XP = 5;
 
-const getTodayDateKey = () => {
-    return new Date().toISOString().split("T")[0];
-};
 
 const clampStat = (value) => {
     return Math.max(0, Math.min(100, value));

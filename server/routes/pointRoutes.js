@@ -5,12 +5,10 @@ const PointTransaction = require("../models/PointTransaction");
 const DailyCareLog = require("../models/DailyCareLog");
 const { protect } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
+const getTodayDateKey = require("../utils/getTodayDateKey");
 
 const router = express.Router();
 
-const getTodayDateKey = () => {
-    return new Date().toISOString().split("T")[0];
-};
 
 const LOGIN_MESSAGES = [
     "Great to see you today!",
