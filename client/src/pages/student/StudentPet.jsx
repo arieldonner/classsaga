@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
 import AnchorTuner from "../../components/dev/AnchorTuner";
+import { ACCESSORY_SLOTS, resolveAccessory } from "../../utils/accessories";
 import StatIcon from "../../components/StatIcon";
 
 
@@ -17,14 +18,7 @@ const withRoam = (offset, roamX) => {
   return o;
 };
 
-const addOffset = (base, delta) => {
-    const d = String(delta ?? "0%").trim();
-    return d.startsWith("-")
-        ? `calc(${base} - ${d.slice(1)})`
-        : `calc(${base} + ${d})`;
-};
 
-const ACCESSORY_SLOTS = ["headSide", "headTop", "eyes"];
 const SLOT_ORDER = ["background", "headTop", "headSide", "eyes"];
 const LOG_ICONS = {
     reward: "bi-arrow-up-circle-fill",
@@ -39,31 +33,6 @@ const SLOT_LABELS = {
     eyes: "Face",
 };
 
-const resolveAccessory = (item, offsets, slot) => {
-    if (!item || !slot) return undefined;
-
-    const tuned = offsets?.accessoryOverrides?.[item.name]?.[slot];
-
-    if (tuned) {
-        return {
-            left: tuned.x,
-            top: tuned.y,
-            width: tuned.width,
-            translate: "-50% -50%",
-            transform: tuned.flipX ? "scaleX(-1)" : undefined,
-        };
-    }
-
-    const anchor = offsets?.anchors?.[slot];
-    if (!anchor) return undefined;
-
-    return {
-        left: addOffset(anchor.x, item.offsetX),
-        top: addOffset(anchor.y, item.offsetY),
-        width: item.accessoryWidth ?? "20%",
-        translate: "-50% -50%",
-    };
-};
 
 export default function StudentPet() {
     const [pet, setPet] = useState(null);

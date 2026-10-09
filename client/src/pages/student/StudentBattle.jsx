@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentBattle.css";
 import StatIcon from "../../components/StatIcon";
+import { ACCESSORY_SLOTS, resolveAccessory, groundShift } from "../../utils/accessories";
 
 export default function StudentBattle() {
     const [battleStatus, setBattleStatus] = useState(null);
     const [pet, setPet] = useState(null);
+    const [equipment, setEquipment] = useState({});
     const [battleResult, setBattleResult] = useState(null);
     const [animatingRound, setAnimatingRound] = useState(null);
     const [displayedLog, setDisplayedLog] = useState([]);
@@ -34,12 +36,14 @@ export default function StudentBattle() {
 
     const fetchStatus = async () => {
         try {
-            const [statusRes, petRes] = await Promise.all([
+            const [statusRes, petRes, equipRes] = await Promise.all([
                 api.get("/api/battle/status"),
                 api.get("/api/pets/my-pet"),
+                api.get("/api/inventory/equipment"),
             ]);
             setBattleStatus(statusRes.data);
             setPet(petRes.data);
+            setEquipment(equipRes.data || {});
         } catch (err) {
             setError("Failed to load battle.");
         } finally {
@@ -203,13 +207,34 @@ export default function StudentBattle() {
                                     <div style={{ textAlign: "center" }}>
                                         <div className={petAttacking ? "pet-tackle" : ""}>
                                             <div className={petHurt ? "pet-hurt" : ""}>
-                                                <div style={{ transform: pet.artFacing === "left" ? "scaleX(-1)" : "none", display: "inline-block" }}>
+                                                <div
+                                                    style={{
+                                                        transform: pet.artFacing === "left" ? "scaleX(-1)" : "none",
+                                                        translate: groundShift(pet.animationOffsets),
+                                                        display: "inline-block",
+                                                        position: "relative",
+                                                    }}
+                                                >
                                                     <img
                                                         src={petHurt && hurtSrc.pet ? hurtSrc.pet : `/assets/pets/${pet.species}.png`}
                                                         alt={pet.name}
                                                         className="battle-breathe"
-                                                        style={{ maxHeight: "160px", objectFit: "contain" }}
+                                                        style={{ maxHeight: "160px", objectFit: "contain", display: "block" }}
                                                     />
+
+                                                    {ACCESSORY_SLOTS.map((slot) => {
+                                                        const item = equipment[slot]?.shopItem;
+                                                        if (!item?.imageKey) return null;
+                                                        return (
+                                                            <img
+                                                                key={slot}
+                                                                src={item.imageKey}
+                                                                alt={item.name}
+                                                                className="pet-accessory"
+                                                                style={resolveAccessory(item, pet.animationOffsets, slot)}
+                                                            />
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>
@@ -233,6 +258,7 @@ export default function StudentBattle() {
                                             <div className={monsterHurt ? "monster-hurt" : ""}>
                                                 <div style={{
                                                     transform: battleStatus.monster.artFacing === "right" ? "scaleX(-1)" : "none",
+                                                    translate: `0 ${(100 - (battleStatus.monster.groundY ?? 100)).toFixed(1)}%`,
                                                     display: "inline-block",
                                                 }}>
                                                     <img
