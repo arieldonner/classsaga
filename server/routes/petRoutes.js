@@ -9,6 +9,7 @@ const PET_TYPES = require("../config/petTypes");
 const applyLevelUps = require("../utils/applyLevelUps");
 const logActivity = require("../utils/logActivity");
 const getTodayDateKey = require("../utils/getTodayDateKey");
+const { validatePetName } = require("../utils/validatePetName");
 const getStudentLevel = require("../utils/getStudentLevel");
 
 const CARE_XP = 5;
@@ -427,6 +428,13 @@ router.post("/choose-starter", protect, async (req, res) => {
 
         const { species, name } = req.body;
 
+        if (name?.trim()) {
+            const nameError = validatePetName(name);
+            if (nameError) {
+                return res.status(400).json({ message: nameError, field: "name" });
+            }
+        }
+
         const petType = PET_TYPES[species];
 
         if (!petType || !petType.isStarter) {
@@ -504,6 +512,12 @@ router.patch("/:petId/activate", protect, async (req, res) => {
 router.patch("/:id/rename", protect, async (req, res) => {
     try {
         const { name } = req.body;
+
+        const nameError = validatePetName(name);
+        if (nameError) {
+            return res.status(400).json({ message: nameError, field: "name" });
+        }
+
         if (!name?.trim()) {
             return res.status(400).json({ message: "Name is required." });
         }

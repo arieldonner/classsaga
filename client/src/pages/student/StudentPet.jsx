@@ -57,6 +57,7 @@ export default function StudentPet() {
     const [showBall, setShowBall] = useState(false);
     const [bookEffect, setBookEffect] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
+    const [nameError, setNameError] = useState("");
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [celebrating, setCelebrating] = useState(false);
@@ -523,12 +524,14 @@ export default function StudentPet() {
 
     const handleRenamePet = async () => {
         if (!nameInput.trim()) return setIsEditingName(false);
+
         try {
             const res = await api.patch(`/api/pets/${pet._id}/rename`, { name: nameInput });
             setPet(res.data);
+            setNameError("");
             setIsEditingName(false);
         } catch (err) {
-            setActionError(err.response?.data?.message || "Failed to rename pet.");
+            setNameError(err.response?.data?.message || "Failed to rename pet.");
         }
     };
 
@@ -682,18 +685,29 @@ export default function StudentPet() {
                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                     <div>
                                         {isEditingName ? (
-                                            <div className="d-flex align-items-center gap-2 mb-1">
-                                                <input
-                                                    className="form-control form-control-sm"
-                                                    style={{ maxWidth: "160px" }}
-                                                    value={nameInput}
-                                                    onChange={(e) => setNameInput(e.target.value)}
-                                                    onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
-                                                    autoFocus
-                                                    maxLength={20}
-                                                />
-                                                <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
-                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setIsEditingName(false)}>Cancel</button>
+                                            <div className="mb-1">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <input
+                                                        className={`form-control form-control-sm ${nameError ? "is-invalid" : ""}`}
+                                                        style={{ maxWidth: "160px" }}
+                                                        value={nameInput}
+                                                        onChange={(e) => { setNameInput(e.target.value); setNameError(""); }}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
+                                                        autoFocus
+                                                        maxLength={20}
+                                                    />
+                                                    <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => { setIsEditingName(false); setNameError(""); }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+
+                                                {nameError && (
+                                                    <div className="text-danger small mt-1">{nameError}</div>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="d-flex align-items-center gap-2 mb-1">
