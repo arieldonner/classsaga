@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import RewardPopup from "../../components/RewardPopup";
 import "./StudentShop.css";
 
 export default function StudentShop() {
@@ -10,11 +11,13 @@ export default function StudentShop() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
+    const [purchase, setPurchase] = useState(null);
     const [currentPoints, setCurrentPoints] = useState(user?.points ?? 0);
     const [inventory, setInventory] = useState([]);
     const [ownedPets, setOwnedPets] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [buyingId, setBuyingId] = useState(null);
+    const [studentLevel, setStudentLevel] = useState(null);
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -24,6 +27,9 @@ export default function StudentShop() {
 
                 const inventoryRes = await api.get("/api/inventory/my-items");
                 setInventory(inventoryRes.data);
+
+                const levelRes = await api.get("/api/pets/my-level");
+                setStudentLevel(levelRes.data);
             } catch (err) {
                 setError(err.response?.data?.message || "Failed to load shop.");
             } finally {
@@ -47,6 +53,18 @@ export default function StudentShop() {
             fetchPets();
         }, []);
 
+    const isOwnedPermanently = (item) => {
+        if (item.itemType === "pet") {
+            return ownedPets.some((p) => p.species === item.petSpecies);
+        }
+
+        if (item.itemType === "cosmetic") {
+            return (getInventoryForItem(item._id)?.quantity || 0) > 0;
+        }
+
+        return false;
+    };
+
     const getInventoryForItem = (itemId) => {
         return inventory.find((inv) => inv.shopItem?._id === itemId);
     };
@@ -62,8 +80,10 @@ export default function StudentShop() {
     };
 
     const handleBuy = async (shopItemId) => {
+        if (buyingId) return;
+
         setError("");
-        setMessage("");
+        setBuyingId(shopItemId);
 
         try {
             const res = await api.post("/api/shop/buy", { shopItemId });
@@ -76,9 +96,17 @@ export default function StudentShop() {
                 await fetchInventory();
             }
 
-            setMessage(res.data.message || "Purchase successful.");
+            const bought = items.find((i) => i._id === shopItemId);
+            setPurchase({
+                name: bought?.name || "Item",
+                imageKey: bought?.imageKey,
+                message: res.data.message || "Purchase successful.",
+            });
+            setTimeout(() => setPurchase(null), 2600);
         } catch (err) {
             setError(err.response?.data?.message || "Failed to buy item.");
+        } finally {
+            setBuyingId(null);
         }
     };
 
@@ -87,7 +115,10 @@ export default function StudentShop() {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="mb-1">Shop</h2>
-                    <p className="mb-0 text-muted">Points: {currentPoints}</p>
+                    <p className="mb-0 text-muted">
+                        {studentLevel && <>Student Level {studentLevel.level} • </>}
+                        Points: {currentPoints}
+                    </p>
                 </div>
 
                 <Link to="/student" className="btn btn-outline-secondary">
@@ -95,10 +126,20 @@ export default function StudentShop() {
                 </Link>
             </div>
 
+            {purchase && (
+                <RewardPopup
+                    image={purchase.imageKey}
+                    imageAlt={purchase.name}
+                    title={purchase.name}
+                    subtitle={purchase.message}
+                    onClose={() => setPurchase(null)}
+                />
+            )}
+
             {loading && <p>Loading shop...</p>}
 
             {error && <div className="alert alert-danger">{error}</div>}
-            {message && <div className="alert alert-success">{message}</div>}
+
 
             <div className="btn-group btn-group-sm mb-3">
                 {["all", "food", "toy", "care", "accessory", "background", "pet"].map((cat) => (
@@ -118,6 +159,8 @@ export default function StudentShop() {
                         <p>No items available yet.</p>
                     ) : (items
                         .filter(item => selectedCategory === "all" || item.category === selectedCategory)
+                        .slice()
+                        .sort((a, b) => Number(isOwnedPermanently(a)) - Number(isOwnedPermanently(b)))
                         .map((item) => {
                             const ownedItem = getInventoryForItem(item._id);
                             const ownedQuantity = ownedItem?.quantity || 0;
@@ -178,8 +221,11 @@ export default function StudentShop() {
                                             <button
                                                 className="btn btn-primary mt-auto w-100"
                                                 onClick={() => handleBuy(item._id)}
-                                                disabled={cannotAfford || alreadyOwned}
+                                                disabled={buyingId !== null || cannotAfford || alreadyOwned}
                                             >
+                                                {buyingId === item._id && (
+                                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                )}
                                                 {alreadyOwned
                                                     ? "Owned"
                                                     : cannotAfford

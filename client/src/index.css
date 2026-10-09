@@ -241,4 +241,147 @@ a.text-decoration-none.card:hover {
     border-color: var(--color-border);
 }
 
+.student-chip {
+  background-color: var(--color-green);
+  color: var(--color-parchment);
+  border: 1px solid rgba(0, 0, 0, .12);
+  font-weight: 600;
+  padding: .4em .7em;
+}
 
+.student-chip .btn-close {
+  opacity: .75;
+}
+
+.student-chip .btn-close:hover {
+  opacity: 1;
+}
+
+.chip-clear {
+  color: var(--color-amber);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.chip-clear:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.activity-log {
+  max-height: 220px;
+  overflow-y: auto;
+  background-color: var(--color-parchment);
+  border: 1px solid var(--color-border);
+  border-radius: .375rem;
+  padding: .5rem .75rem;
+}
+
+.activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: .25rem;
+  padding: .15rem 0;
+  font-size: .875rem;
+  border-bottom: 1px solid rgba(0, 0, 0, .05);
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-time {
+  color: var(--color-text);
+  opacity: .6;
+  white-space: nowrap;
+  margin-right: .4rem;
+}
+
+.activity-reward i,
+.activity-reward .activity-text {
+  color: var(--color-green);
+}
+
+.activity-cost i,
+.activity-cost .activity-text {
+  color: var(--color-amber);
+}
+
+.activity-neutral i {
+  opacity: .4;
+}
+
+.activity-meta {
+  display: block;
+  color: var(--color-text);
+  opacity: .6;
+}
+
+.activity-row.align-items-start {
+  align-items: flex-start;
+}
+
+.btn-sprite {
+  width: auto;
+  margin-right: .5rem;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
+.reward-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .35);
+  animation: rewardFade .18s ease-out;
+}
+
+.reward-card {
+  background: var(--color-parchment);
+  border: 2px solid var(--color-border);
+  border-radius: .75rem;
+  padding: 1.25rem 2rem;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  animation: rewardPop .32s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.reward-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto .5rem;
+}
+
+.reward-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.reward-sub {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+@keyframes rewardFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes rewardPop {
+  0%   { scale: .7;   opacity: 0; }
+  60%  { scale: 1.04; opacity: 1; }
+  100% { scale: 1;    opacity: 1; }
+}
+
+.reward-hint {
+  margin-top: .75rem;
+  font-size: .8rem;
+  color: var(--color-text);
+  opacity: .55;
+}

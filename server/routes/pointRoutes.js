@@ -5,21 +5,23 @@ const PointTransaction = require("../models/PointTransaction");
 const DailyCareLog = require("../models/DailyCareLog");
 const { protect } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
+const getTodayDateKey = require("../utils/getTodayDateKey");
 
 const router = express.Router();
 
-const getTodayDateKey = () => {
-    return new Date().toISOString().split("T")[0];
-};
 
 const LOGIN_MESSAGES = [
     "Great to see you today!",
     "Ready for another day of adventure?",
-    "Your pet missed you!",
     "Keep up the great work!",
-    "Every day counts — welcome back!",
+    "Every day counts. Welcome back!",
     "You're on a roll!",
     "Let's make today a good one.",
+    "Good to see you again!",
+    "I think you're doing great.",
+    "Keep being awesome.",
+    "You've got this today.",
+    "I'm proud of you.",
 ];
 
 // Daily login
@@ -41,7 +43,7 @@ router.post("/daily-login", protect, async (req, res) => {
             return res.json({ claimed: false, studentPoints: req.user.points });
         }
 
-        const bonusAmount = 5;
+        const bonusAmount = 10;
 
         req.user.points += bonusAmount;
         await req.user.save();
@@ -138,13 +140,15 @@ router.get("/my-transactions", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can view transactions." });
         }
 
+        const limit = Math.min(Number(req.query.limit) || 10, 50);
+
         const transactions = await PointTransaction.find({
             student: req.user._id,
         })
             .populate("teacher", "name")
             .populate("classroom", "name")
             .sort({ createdAt: -1 })
-            .limit(10);
+            .limit(limit);
 
         res.json(transactions);
     } catch (err) {

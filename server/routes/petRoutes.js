@@ -7,10 +7,13 @@ const PointTransaction = require("../models/PointTransaction");
 const { protect } = require("../middleware/authMiddleware");
 const PET_TYPES = require("../config/petTypes");
 const applyLevelUps = require("../utils/applyLevelUps");
+const logActivity = require("../utils/logActivity");
+const getTodayDateKey = require("../utils/getTodayDateKey");
+const { validatePetName } = require("../utils/validatePetName");
+const getStudentLevel = require("../utils/getStudentLevel");
 
-const getTodayDateKey = () => {
-    return new Date().toISOString().split("T")[0];
-};
+const CARE_XP = 5;
+
 
 const clampStat = (value) => {
     return Math.max(0, Math.min(100, value));
@@ -63,13 +66,30 @@ router.get("/my-pet", protect, async (req, res) => {
 
         const petType = PET_TYPES[pet.species];
 
+        const studentLevel = await getStudentLevel(req.user._id);
+
         res.json({
             ...pet.toObject(),
+            studentLevel,
+            hurtAdjust: petType?.hurtAdjust || null,
             animationOffsets: petType?.animationOffsets || {},
             artFacing: petType?.artFacing || "left",
         });
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch pet." });
+    }
+});
+
+// Student level derived from all owned pets
+router.get("/my-level", protect, async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students have a level." });
+        }
+
+        res.json(await getStudentLevel(req.user._id));
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch student level." });
     }
 });
 
@@ -97,33 +117,27 @@ router.post("/feed", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can feed pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -146,14 +160,32 @@ router.post("/feed", protect, async (req, res) => {
             });
         }
 
+        const prevHunger = pet.hunger;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.hunger = Math.min(100, pet.hunger + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        const hungerGain = pet.hunger - prevHunger;
+        logActivity(
+            pet,
+            `Fed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${hungerGain > 0 ? `Hunger +${hungerGain}` : "Hunger already full"} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
+
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,
@@ -172,33 +204,27 @@ router.post("/play", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can play with pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -221,14 +247,32 @@ router.post("/play", protect, async (req, res) => {
             });
         }
 
+        const prevHappiness = pet.happiness;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.happiness = Math.min(100, pet.happiness + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        const happinessGain = pet.happiness - prevHappiness;
+        logActivity(
+            pet,
+            `Played with ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${happinessGain > 0 ? `Happiness +${happinessGain}` : "Happiness already full"} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
+
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,
@@ -247,33 +291,27 @@ router.post("/brush", protect, async (req, res) => {
             return res.status(403).json({ message: "Only students can brush pets." });
         }
 
-        const pet = await Pet.findOne({ student: req.user._id, isActive: true });
+        const dateKey = getTodayDateKey();
+
+        const [pet, student, existingLog] = await Promise.all([
+            Pet.findOne({ student: req.user._id, isActive: true }),
+            User.findById(req.user._id),
+            DailyCareLog.findOne({ student: req.user._id, dateKey }),
+        ]);
 
         if (!pet) {
             return res.status(404).json({ message: "Pet not found." });
         }
 
-        applyPetDecay(pet);
-
-        const student = await User.findById(req.user._id);
-
         if (!student) {
             return res.status(404).json({ message: "Student not found." });
         }
 
-        const dateKey = getTodayDateKey();
+        applyPetDecay(pet);
 
-        let log = await DailyCareLog.findOne({
-            student: req.user._id,
-            dateKey,
-        });
-
-        if (!log) {
-            log = await DailyCareLog.create({
-                student: req.user._id,
-                dateKey,
-            });
-        }
+        const log =
+            existingLog ||
+            (await DailyCareLog.create({ student: req.user._id, dateKey }));
 
         const cost = 10;
         let actionType = "free";
@@ -296,14 +334,32 @@ router.post("/brush", protect, async (req, res) => {
             });
         }
 
+        const prevCleanliness = pet.cleanliness;
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
+
         pet.cleanliness = Math.min(100, pet.cleanliness + 15);
-        pet.experience += 5;
+        pet.experience += CARE_XP;
         applyLevelUps(pet);
         pet.lastUpdated = new Date();
 
-        await pet.save();
-        await log.save();
-        await student.save();
+        const cleanlinessGain = pet.cleanliness - prevCleanliness;
+        logActivity(
+            pet,
+            `Brushed ${pet.name}${actionType === "paid" ? " (-10 pts)" : " (Free)"} • ${cleanlinessGain > 0 ? `Cleanliness +${cleanlinessGain}` : "Cleanliness already full"} • XP +${CARE_XP}`,
+            actionType === "paid" ? "cost" : "reward"
+        );
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
+
+        await Promise.all([pet.save(), log.save(), student.save()]);
 
         res.json({
             pet,
@@ -371,6 +427,13 @@ router.post("/choose-starter", protect, async (req, res) => {
         }
 
         const { species, name } = req.body;
+
+        if (name?.trim()) {
+            const nameError = validatePetName(name);
+            if (nameError) {
+                return res.status(400).json({ message: nameError, field: "name" });
+            }
+        }
 
         const petType = PET_TYPES[species];
 
@@ -449,6 +512,12 @@ router.patch("/:petId/activate", protect, async (req, res) => {
 router.patch("/:id/rename", protect, async (req, res) => {
     try {
         const { name } = req.body;
+
+        const nameError = validatePetName(name);
+        if (nameError) {
+            return res.status(400).json({ message: nameError, field: "name" });
+        }
+
         if (!name?.trim()) {
             return res.status(400).json({ message: "Name is required." });
         }

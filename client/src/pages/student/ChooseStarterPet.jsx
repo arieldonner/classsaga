@@ -15,6 +15,7 @@ export default function ChooseStarterPet() {
     const [choosing, setChoosing] = useState(false);
     const [error, setError] = useState("");
     const [petName, setPetName] = useState("");
+    const [nameError, setNameError] = useState("");
 
     const petImages = {
         wolfy: wolfyImage,
@@ -61,7 +62,13 @@ export default function ChooseStarterPet() {
 
             navigate("/student/pet");
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to choose starter pet.");
+            const message = err.response?.data?.message || "Failed to choose starter pet.";
+
+            if (err.response?.data?.field === "name") {
+                setNameError(message);
+            } else {
+                setError(message);
+            }
         } finally {
             setChoosing(false);
         }
@@ -120,14 +127,19 @@ export default function ChooseStarterPet() {
                     <div className="d-flex flex-column align-items-center mb-3">
                         <input
                             type="text"
-                            className="form-control"
+                            className={`form-control ${nameError ? "is-invalid" : ""}`}
                             style={{ maxWidth: "300px" }}
                             placeholder="Name your pet..."
                             value={petName}
-                            onChange={(e) => setPetName(e.target.value)}
+                            onChange={(e) => { setPetName(e.target.value); setNameError(""); }}
                             maxLength={20}
                         />
-                        <small className="text-muted">Leave blank to use the default pet name.</small>
+
+                        {nameError ? (
+                            <div className="text-danger small mt-1">{nameError}</div>
+                        ) : (
+                            <small className="text-muted">Leave blank to use the default pet name.</small>
+                        )}
                     </div>
 
                     <div className="text-center">

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
+import RewardPopup from "../../components/RewardPopup";
 
 export default function StudentDashboard() {
     const [classrooms, setClassrooms] = useState([]);
@@ -16,6 +17,8 @@ export default function StudentDashboard() {
     const [loadingPet, setLoadingPet] = useState(true);
 
     const [loginBonus, setLoginBonus] = useState(null);
+    const [ownedPets, setOwnedPets] = useState([]);
+    const [greeter, setGreeter] = useState(null);
 
     const navigate = useNavigate();
 
@@ -38,7 +41,7 @@ export default function StudentDashboard() {
 
     const fetchTransactions = async () => {
         try {
-            const res = await api.get("/api/points/my-transactions");
+            const res = await api.get("/api/points/my-transactions?limit=25");
             setTransactions(res.data);
         } catch (err) {
             console.error("Failed to load transactions");
@@ -72,6 +75,19 @@ export default function StudentDashboard() {
     }, []);
 
     useEffect(() => {
+        const fetchOwnedPets = async () => {
+            try {
+                const res = await api.get("/api/pets/my-pets");
+                setOwnedPets(res.data || []);
+            } catch (err) {
+                console.error("Failed to load pets");
+            }
+        };
+
+        fetchOwnedPets();
+    }, []);
+
+    useEffect(() => {
         const claimLoginBonus = async () => {
             try {
                 const res = await api.post("/api/points/daily-login");
@@ -94,21 +110,57 @@ export default function StudentDashboard() {
         return "#c0392b";
     };
 
+    useEffect(() => {
+        if (!loginBonus || !ownedPets.length) return;
+
+        const pick = ownedPets[Math.floor(Math.random() * ownedPets.length)];
+        const show = setTimeout(() => setGreeter(pick), 400);
+
+        return () => clearTimeout(show);
+    }, [loginBonus, ownedPets]);
+
     return (
         <div className="container py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>Student Dashboard</h2>
             </div>
 
-            {loginBonus && (
-                <div className="alert alert-success d-flex justify-content-between align-items-center">
-                    <span>+{loginBonus.points} points for logging in today! {loginBonus.message}</span>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={() => setLoginBonus(null)}
-                    ></button>
+            {pet?.studentLevel && (
+                <div className="card shadow-sm p-3 mb-4">
+                    <label className="form-label fw-semibold mb-1">
+                        Student Level {pet.studentLevel.level}{" "}
+                        <span className="text-muted fw-normal">
+                            (XP {pet.studentLevel.xpIntoLevel} / {pet.studentLevel.xpForNext})
+                        </span>
+                    </label>
+
+                    <div className="progress">
+                        <div
+                            className="progress-bar bg-info"
+                            role="progressbar"
+                            style={{ width: `${pet.studentLevel.xpIntoLevel}%` }}
+                            aria-valuenow={pet.studentLevel.xpIntoLevel}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                        >
+                            {pet.studentLevel.xpIntoLevel}
+                        </div>
+                    </div>
                 </div>
+            )}
+
+            {greeter && loginBonus && (
+                <RewardPopup
+                    image={`/assets/pets/${greeter.species}.png`}
+                    imageAlt={greeter.name}
+                    title={`+${loginBonus.points} Points`}
+                    subtitle={`${greeter.name} says: ${loginBonus.message}`}
+                    hint="Tap anywhere to continue"
+                    onClose={() => {
+                        setGreeter(null);
+                        setLoginBonus(null);
+                    }}
+                />
             )}
 
             <div className="row g-4 mb-4">
@@ -187,19 +239,35 @@ export default function StudentDashboard() {
                 ) : transactions.length === 0 ? (
                     <p className="mb-0">No recent activity yet. Complete actions or receive points to see updates here.</p>
                 ) : (
-                    <div className="list-group">
+                    <div className="activity-log">
                         {transactions.map((tx) => (
-                            <div key={tx._id} className="list-group-item">
-                            <div className="fw-semibold">
-                                {tx.amount > 0 ? `+${tx.amount}` : tx.amount} points
-                            </div>
+                            <div
+                                key={tx._id}
+                                className={`activity-row activity-${tx.amount > 0 ? "reward" : "cost"} align-items-start`}
+                            >
+                                <i
+                                    className={`bi ${tx.amount > 0 ? "bi-arrow-up-circle-fill" : "bi-dash-circle-fill"} me-2`}
+                                    aria-hidden="true"
+                                />
 
-                            <div className="text-muted">
-                                {tx.reason}
-                            </div>
-                            <small className="text-muted">
-                                {tx.classroom?.name || "Pet/Shop"} • {tx.teacher?.name || "System" } • {" "} {new Date(tx.createdAt).toLocaleString(undefined, {month: "short", day: "numeric", hour: "numeric", minute: "2-digit",})}
-                            </small>
+                                <div className="flex-grow-1">
+                                    <div>
+                                        <span className="activity-text fw-semibold">
+                                            {tx.amount > 0 ? `+${tx.amount}` : tx.amount} points
+                                        </span>
+                                        <span className="ms-2">{tx.reason}</span>
+                                    </div>
+
+                                    <small className="activity-meta">
+                                        {tx.classroom?.name || "Pet/Shop"} • {tx.teacher?.name || "System"} •{" "}
+                                        {new Date(tx.createdAt).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                        })}
+                                    </small>
+                                </div>
                             </div>
                         ))}
                     </div>

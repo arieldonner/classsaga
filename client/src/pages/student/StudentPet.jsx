@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import "./StudentPet.css";
 import AnchorTuner from "../../components/dev/AnchorTuner";
+import { ACCESSORY_SLOTS, resolveAccessory } from "../../utils/accessories";
+import StatIcon from "../../components/StatIcon";
 
 
 const withRoam = (offset, roamX) => {
@@ -16,15 +18,14 @@ const withRoam = (offset, roamX) => {
   return o;
 };
 
-const addOffset = (base, delta) => {
-    const d = String(delta ?? "0%").trim();
-    return d.startsWith("-")
-        ? `calc(${base} - ${d.slice(1)})`
-        : `calc(${base} + ${d})`;
+
+const SLOT_ORDER = ["background", "headTop", "headSide", "eyes"];
+const LOG_ICONS = {
+    reward: "bi-arrow-up-circle-fill",
+    cost: "bi-dash-circle-fill",
+    neutral: "bi-dot",
 };
 
-const ACCESSORY_SLOTS = ["headSide", "headTop", "eyes"];
-const SLOT_ORDER = ["background", "headTop", "headSide", "eyes"];
 const SLOT_LABELS = {
     background: "Background",
     headSide: "Side",
@@ -32,31 +33,6 @@ const SLOT_LABELS = {
     eyes: "Face",
 };
 
-const resolveAccessory = (item, offsets, slot) => {
-    if (!item || !slot) return undefined;
-
-    const tuned = offsets?.accessoryOverrides?.[item.name]?.[slot];
-
-    if (tuned) {
-        return {
-            left: tuned.x,
-            top: tuned.y,
-            width: tuned.width,
-            translate: "-50% -50%",
-            transform: tuned.flipX ? "scaleX(-1)" : undefined,
-        };
-    }
-
-    const anchor = offsets?.anchors?.[slot];
-    if (!anchor) return undefined;
-
-    return {
-        left: addOffset(anchor.x, item.offsetX),
-        top: addOffset(anchor.y, item.offsetY),
-        width: item.accessoryWidth ?? "20%",
-        translate: "-50% -50%",
-    };
-};
 
 export default function StudentPet() {
     const [pet, setPet] = useState(null);
@@ -81,8 +57,10 @@ export default function StudentPet() {
     const [showBall, setShowBall] = useState(false);
     const [bookEffect, setBookEffect] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
+    const [nameError, setNameError] = useState("");
     const [nameInput, setNameInput] = useState("");
     const [showLevelUp, setShowLevelUp] = useState(false);
+    const [celebrating, setCelebrating] = useState(false);
     const [selectedInventoryCategory, setSelectedInventoryCategory] = useState("all");
     const [animationOffsets, setAnimationOffsets] = useState({});
     const [artFacing, setArtFacing] = useState("left");
@@ -90,6 +68,7 @@ export default function StudentPet() {
 
     const busy = Boolean(reaction || feedEffect || showBall || brushEffect || bookEffect);
     const [tuning, setTuning] = useState(false);
+    const [pending, setPending] = useState(null);
     const flipped = (facing === "right") !== (artFacing === "right");
 
     const ROAM_RANGE = 140;   // px each side of center
@@ -113,8 +92,8 @@ export default function StudentPet() {
         ? { backgroundImage: `url(${bgKey})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
         : { background: "var(--color-panel)" };
 
-    const formatLogTime = () => {
-        return new Date().toLocaleString(undefined, {
+    const formatLogTime = (at) => {
+        return new Date(at ?? Date.now()).toLocaleString(undefined, {
             month: "short",
             day: "numeric",
             hour: "numeric",
@@ -122,12 +101,6 @@ export default function StudentPet() {
         });
     };
 
-    const addMessage = (text) => {
-        setMessages((prev) => [
-            ...prev.slice(-19),
-            { id: Date.now(), text: `[${formatLogTime()}] ${text}`, }, 
-        ]);
-    };
 
     const tunerAccessories = ACCESSORY_SLOTS
         .map((slot) => {
@@ -223,19 +196,19 @@ export default function StudentPet() {
     }, []);
 
     useEffect(() => {
-        const storedMessages = localStorage.getItem("petMessages");
-        if (storedMessages) {
-            setMessages(JSON.parse(storedMessages));
-        }
-    }, []);
+        setMessages(pet?.activityLog ?? []);
+    }, [pet]);
 
     useEffect(() => {
-        localStorage.setItem("petMessages", JSON.stringify(messages));
-    }, [messages]);
+        if (!pet?._id) return;
+        setOwnedPets((prev) =>
+            prev.map((owned) => (owned._id === pet._id ? { ...owned, ...pet } : owned))
+        );
+    }, [pet]);
 
     useEffect(() => {
         if (logRef.current) {
-            logRef.current.scrollTop = logRef.current.scrollHeight;
+            logRef.current.scrollTop = 0;
         }
     }, [messages]);
 
@@ -272,6 +245,8 @@ export default function StudentPet() {
 
 
     const handleFeed = async () => {
+        if (pending === "feed") return;
+        setPending("feed");
         setActionError("");
 
         try {
@@ -300,15 +275,10 @@ export default function StudentPet() {
                     ? `Fed ${res.data.pet.name} (Free) • Hunger +${hungerIncrease}`
                     : `Fed ${res.data.pet.name} (-10 pts) • Hunger +${hungerIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ hunger: hungerIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${res.data.pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `${res.data.pet.name} Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
             setFeedEffect("/assets/effects/PetFood.png");
             setTimeout(() => {
@@ -319,10 +289,14 @@ export default function StudentPet() {
 
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to feed pet.");
+        } finally {
+            setPending(null);
         }
     };
 
     const handlePlay = async () => {
+        if (pending === "play") return;
+        setPending("play");
         setActionError("");
 
         try {
@@ -351,15 +325,10 @@ export default function StudentPet() {
                     ? `Played with ${res.data.pet.name} (Free) • Happiness +${happinessIncrease}`
                     : `Played with ${res.data.pet.name} (-10 pts) • Happiness +${happinessIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ happiness: happinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
 
             setShowBall(true);
@@ -370,10 +339,14 @@ export default function StudentPet() {
             }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to play with pet.");
+        } finally {
+            setPending(null);
         }
     };
 
     const handleBrush = async () => {
+        if (pending === "brush") return;
+        setPending("brush");
         setActionError("");
 
         try {
@@ -402,15 +375,10 @@ export default function StudentPet() {
                     ? `Brushed ${res.data.pet.name} (Free) • Cleanliness +${cleanlinessIncrease}`
                     : `Brushed ${res.data.pet.name} (-10 pts) • Cleanliness +${cleanlinessIncrease}`;
 
-            addMessage(actionMessage);
             showStatChanges({ cleanliness: cleanlinessIncrease, experience: xpGain });
 
             if (res.data.pet.level > previousLevel) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${pet.name} reached Level ${res.data.pet.level}`);
-                addMessage(
-                    `Battle Stats Increased • STR ${res.data.pet.strength} • SPD ${res.data.pet.speed} • DEF ${res.data.pet.defense}`
-                );
             }
 
             setBrushEffect("/assets/effects/HairBrush.png");
@@ -421,6 +389,8 @@ export default function StudentPet() {
             }, 2500);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to brush pet.");
+        } finally {
+            setPending(null);
         }
     };
 
@@ -494,11 +464,9 @@ export default function StudentPet() {
                 changes.defense = item.defenseValue;
             }
 
-            addMessage(messages.join(" • "));
 
             if (updatedPet.level > previousPet.level) {
                 triggerLevelUp();
-                addMessage(`Level Up! ${updatedPet.name} reached Lv ${updatedPet.level}`);
             }
 
             showStatChanges(changes);
@@ -517,7 +485,6 @@ export default function StudentPet() {
 
             await fetchEquipment();
 
-            addMessage(res.data.message);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to equip item.");
         }
@@ -533,7 +500,6 @@ export default function StudentPet() {
             const res = await api.post("/api/inventory/unequip", { slot });
 
             await fetchEquipment();
-            addMessage(res.data.message);
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to unequip item.");
         }
@@ -550,7 +516,6 @@ export default function StudentPet() {
             await fetchOwnedPets();
             await fetchEquipment();
 
-            addMessage(res.data.message);
             setActiveTab("care");
         } catch (err) {
             setActionError(err.response?.data?.message || "Failed to switch pet.");
@@ -559,18 +524,22 @@ export default function StudentPet() {
 
     const handleRenamePet = async () => {
         if (!nameInput.trim()) return setIsEditingName(false);
+
         try {
             const res = await api.patch(`/api/pets/${pet._id}/rename`, { name: nameInput });
             setPet(res.data);
+            setNameError("");
             setIsEditingName(false);
         } catch (err) {
-            setActionError(err.response?.data?.message || "Failed to rename pet.");
+            setNameError(err.response?.data?.message || "Failed to rename pet.");
         }
     };
 
     const triggerLevelUp = () => {
         setShowLevelUp(true);
-        setTimeout(() => setShowLevelUp(false), 3000);
+        setCelebrating(true);
+        setTimeout(() => setCelebrating(false), 1400);
+        setTimeout(() => setShowLevelUp(false), 4500);
     };
 
     const statColor = (value) => {
@@ -634,7 +603,7 @@ export default function StudentPet() {
                                             }}
                                         >
                                             <div className="pet-shadow" style={animationOffsets?.shadow} />
-                                            <div className={`pet-container ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
+                                            <div className={`pet-container ${celebrating ? "celebrating" : ""} ${reaction} ${feedEffect ? "eating" : ""} ${showBall ? "playing" : ""} ${brushEffect ? "brushing" : ""} ${bookEffect ? "playing" : ""}`  }>
                                                 <div className={`pet-sprite ${tuning ? "" : "pet-idle"}`}>
                                                     <img
                                                         src={`/assets/pets/${pet.species}.png`}
@@ -702,7 +671,7 @@ export default function StudentPet() {
                                     />
                                 )}
                                 {showLevelUp && (
-                                    <div className="level-up-anim">Level Up!</div>
+                                    <div className="level-up-anim">Level {pet.level}!</div>
                                 )}
                                 </div>
                             </div>
@@ -716,18 +685,29 @@ export default function StudentPet() {
                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                     <div>
                                         {isEditingName ? (
-                                            <div className="d-flex align-items-center gap-2 mb-1">
-                                                <input
-                                                    className="form-control form-control-sm"
-                                                    style={{ maxWidth: "160px" }}
-                                                    value={nameInput}
-                                                    onChange={(e) => setNameInput(e.target.value)}
-                                                    onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
-                                                    autoFocus
-                                                    maxLength={20}
-                                                />
-                                                <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
-                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => setIsEditingName(false)}>Cancel</button>
+                                            <div className="mb-1">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <input
+                                                        className={`form-control form-control-sm ${nameError ? "is-invalid" : ""}`}
+                                                        style={{ maxWidth: "160px" }}
+                                                        value={nameInput}
+                                                        onChange={(e) => { setNameInput(e.target.value); setNameError(""); }}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleRenamePet()}
+                                                        autoFocus
+                                                        maxLength={20}
+                                                    />
+                                                    <button className="btn btn-sm btn-primary" onClick={handleRenamePet}>Save</button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => { setIsEditingName(false); setNameError(""); }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+
+                                                {nameError && (
+                                                    <div className="text-danger small mt-1">{nameError}</div>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="d-flex align-items-center gap-2 mb-1">
@@ -815,21 +795,21 @@ export default function StudentPet() {
 
                                             <div className="d-flex gap-4 flex-wrap">
                                                 <div>
-                                                    <span className="fw-semibold">STR:</span> {pet.strength}
+                                                    <StatIcon kind="str" /><span className="fw-semibold">STR:</span> {pet.strength}
                                                     {statChanges.strength && (
                                                         <span className="text-success ms-2">+{statChanges.strength}</span>
                                                     )}
                                                 </div>
 
                                                 <div>
-                                                    <span className="fw-semibold">SPD:</span> {pet.speed}
+                                                    <StatIcon kind="spd" /><span className="fw-semibold">SPD:</span> {pet.speed}
                                                     {statChanges.speed && (
                                                         <span className="text-success ms-2">+{statChanges.speed}</span>
                                                     )}
                                                 </div>
 
                                                 <div>
-                                                    <span className="fw-semibold">DEF:</span> {pet.defense}
+                                                    <StatIcon kind="def" /><span className="fw-semibold">DEF:</span> {pet.defense}
                                                     {statChanges.defense && (
                                                         <span className="text-success ms-2">+{statChanges.defense}</span>
                                                     )}
@@ -901,24 +881,33 @@ export default function StudentPet() {
                                             <button
                                                 className="btn btn-success"
                                                 onClick={handleFeed}
-                                                disabled={dailyStatus.feedUsed && currentPoints < 10}
+                                                disabled={pending === "feed" || (dailyStatus.feedUsed && currentPoints < 10)}
                                             >
+                                                {pending === "feed"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/PetFood.png" alt="" className="btn-sprite" style={{ height: "32px" }} />}
                                                 {dailyStatus.feedUsed ? "Feed (10 pts)" : "Feed (Free)"}
                                             </button>
 
                                             <button
                                                 className="btn btn-primary"
                                                 onClick={handlePlay}
-                                                disabled={dailyStatus.playUsed && currentPoints < 10}
+                                                disabled={pending === "play" || (dailyStatus.playUsed && currentPoints < 10)}
                                             >
+                                                {pending === "play"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/BallOfSlime.png" alt="" className="btn-sprite" style={{ height: "26px" }} />}
                                                 {dailyStatus.playUsed ? "Play (10 pts)" : "Play (Free)"}
                                             </button>
 
                                             <button
                                                 className="btn btn-secondary"
                                                 onClick={handleBrush}
-                                                disabled={dailyStatus.brushUsed && currentPoints < 10}
+                                                disabled={pending === "brush" || (dailyStatus.brushUsed && currentPoints < 10)}
                                             >
+                                                {pending === "brush"
+                                                    ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                                                    : <img src="/assets/effects/HairBrush.png" alt="" className="btn-sprite" style={{ height: "22px" }} />}
                                                 {dailyStatus.brushUsed ? "Brush (10 pts)" : "Brush (Free)"}
                                             </button>
                                         </div>
@@ -1119,17 +1108,19 @@ export default function StudentPet() {
                     <div className="card shadow-sm p-4">
                         <h5 className="mb-2">Activity Log</h5>
 
-                        <textarea
-                            ref={logRef}
-                            className="form-control bg-light"
-                            value={
-                                messages.length === 0
-                                    ? "No recent activity."
-                                    : messages.map((msg) => msg.text).join("\n")
-                            }
-                            readOnly
-                            rows={5}
-                        />
+                        <div ref={logRef} className="activity-log">
+                            {messages.length === 0 ? (
+                                <p className="text-muted mb-0">No recent activity.</p>
+                            ) : (
+                                [...messages].reverse().map((msg, idx) => (
+                                    <div key={msg._id ?? idx} className={`activity-row activity-${msg.type ?? "neutral"}`}>
+                                        <i className={`bi ${LOG_ICONS[msg.type] ?? LOG_ICONS.neutral} me-2`} aria-hidden="true" />
+                                        <span className="activity-time">{formatLogTime(msg.at)}</span>
+                                        <span className="activity-text">{msg.text}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </>
             )}

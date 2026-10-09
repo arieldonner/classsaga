@@ -186,10 +186,9 @@ export default function TeacherClassroomDetails() {
         }
     };
 
-    const selectedStudentNames =
+    const selectedStudentList =
         classroom?.students
-        .filter((student) => selectedStudents.includes(student._id))
-        .map((student) => student.name) || [];
+        .filter((student) => selectedStudents.includes(student._id)) || [];
 
     return (
         <div className="container py-4">
@@ -350,11 +349,38 @@ export default function TeacherClassroomDetails() {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label fw-bold">Selected Students</label>
-                    {selectedStudentNames.length === 0 ? (
+                    <label className="form-label fw-bold">
+                        Selected Students{selectedStudentList.length > 0 && ` (${selectedStudentList.length})`}
+                    </label>
+
+                    {selectedStudentList.length === 0 ? (
                     <p className="text-muted mb-0">No students selected.</p>
                     ) : (
-                    <p className="mb-0">{selectedStudentNames.join(", ")}</p>
+                    <div className="d-flex flex-wrap gap-2 align-items-center">
+                        {selectedStudentList.map((student) => (
+                            <span
+                                key={student._id}
+                                className="badge rounded-pill student-chip d-inline-flex align-items-center gap-2"
+                            >
+                                {student.name}
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    style={{ fontSize: ".55rem" }}
+                                    aria-label={`Remove ${student.name}`}
+                                    onClick={() => handleStudentToggle(student._id)}
+                                />
+                            </span>
+                        ))}
+
+                        <button
+                            type="button"
+                            className="btn btn-link btn-sm p-0 chip-clear"
+                            onClick={() => setSelectedStudents([])}
+                        >
+                            Clear all
+                        </button>
+                    </div>
                     )}
                 </div>
 

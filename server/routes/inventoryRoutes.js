@@ -7,6 +7,7 @@ const Pet = require("../models/Pet");
 const ShopItem = require("../models/ShopItem");
 const PetEquipment = require("../models/PetEquipment");
 const applyLevelUps = require("../utils/applyLevelUps");
+const logActivity = require("../utils/logActivity");
 
 const EQUIP_SLOTS = ["background", "headTop", "headSide", "eyes"];
 
@@ -69,6 +70,15 @@ router.post("/use", protect, async (req, res) => {
             return res.status(404).json({ message: "Pet not found." });
         }
 
+        const beforeUse = {
+            hunger: pet.hunger,
+            happiness: pet.happiness,
+            cleanliness: pet.cleanliness,
+            strength: pet.strength,
+            speed: pet.speed,
+            defense: pet.defense,
+        };
+
         // Apply stat effect
         if (item.effectType === "hunger") {
             pet.hunger = Math.min(100, pet.hunger + item.effectValue);
@@ -93,7 +103,44 @@ router.post("/use", protect, async (req, res) => {
         if (item.defenseValue) pet.defense += item.defenseValue;
 
         // level up
+        const prevLevel = pet.level;
+        const prevStats = { strength: pet.strength, speed: pet.speed, defense: pet.defense };
         const leveledUp = applyLevelUps(pet);
+
+        const USE_LABELS = {
+            hunger: "Hunger",
+            happiness: "Happiness",
+            cleanliness: "Cleanliness",
+            strength: "STR",
+            speed: "SPD",
+            defense: "DEF",
+        };
+
+        const useParts = [`Used ${item.name} on ${pet.name}`];
+
+        Object.keys(USE_LABELS).forEach((field) => {
+            const gain = pet[field] - beforeUse[field];
+            if (gain > 0) useParts.push(`${USE_LABELS[field]} +${gain}`);
+        });
+
+        const CARE_FIELDS = ["hunger", "happiness", "cleanliness"];
+
+        if (CARE_FIELDS.includes(item.effectType) && pet[item.effectType] === beforeUse[item.effectType]) {
+            useParts.push(`${USE_LABELS[item.effectType]} already full`);
+        }
+
+        if (item.xpValue) useParts.push(`XP +${item.xpValue}`);
+
+        logActivity(pet, useParts.join(" • "), "reward");
+
+        if (pet.level > prevLevel) {
+            logActivity(pet, `Level Up! ${pet.name} reached Level ${pet.level}`, "reward");
+            logActivity(
+                pet,
+                `Battle stats increased • STR +${pet.strength - prevStats.strength} • SPD +${pet.speed - prevStats.speed} • DEF +${pet.defense - prevStats.defense}`,
+                "reward"
+            );
+        }
 
         // Reduce inventory
         inventoryItem.quantity -= 1;
